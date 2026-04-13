@@ -15,7 +15,9 @@ export function useAutoLoad() {
     if (!isLoaded) {
       loadFromIndexedDB().then((loaded) => {
         if (!loaded && READ_ONLY) {
-          fetch(new URL('/data/family.json', window.location.href))
+          // Use basePath-relative URL so it works on GitHub Pages (/NameKeeper/data/...)
+          const basePath = process.env.__NEXT_ROUTER_BASEPATH || '';
+          fetch(`${basePath}/data/family.json`)
             .then(r => r.ok ? r.text() : null)
             .then(json => { if (json) loadFromJson(json, 'family.json'); })
             .catch(() => {});
