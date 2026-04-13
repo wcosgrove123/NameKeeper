@@ -1,6 +1,6 @@
 {
   "format": "namekeeper-v1",
-  "exportDate": "2026-04-13T00:04:49.277Z",
+  "exportDate": "2026-04-13T00:25:22.909Z",
   "persons": [
     {
       "id": "@I1@",
@@ -814,7 +814,8 @@
         "@F27@"
       ],
       "notes": [
-        "Bio notes: Born on Aug 23 1910 in Shenandoah, PA. Lived in Shenandoah Ward 3, Schuylkill Co., PA in 1920 and moved to Philadelphia in 1930. Got married in 1934 to Ryde Shryock Stewart. Had his first and only son, Robert Cosgrove in 1937. He later died probably still in Philadelphia on Nov 19th, 1989."
+        "Bio notes: Born on Aug 23 1910 in Shenandoah, PA. Lived in Shenandoah Ward 3, Schuylkill Co., PA in 1920 and moved to Philadelphia in 1930. Got married in 1934 to Ryde Shryock Stewart. Had his first and only son, Robert Cosgrove in 1937. He later died probably still in Philadelphia on Nov 19th, 1989.",
+        "Merchant Marine WWII — highest per-capita casualty rate of any US service (1 in 26 killed, 733 ships sunk). Denied veteran status until Jan 19, 1988 (Schumacher v. Aldridge). Died Nov 19, 1989 — only 22 months after recognition. Service records at NARA Record Group 26, St. Louis (opened Dec 2019)."
       ],
       "marriedName": "Cosgrove",
       "birthDate": "23 AUG 1911",
@@ -825,14 +826,14 @@
     {
       "id": "@I61@",
       "givenName": "Ryde Shryock",
-      "surname": "Stewart",
+      "surname": "Shryock",
       "sex": "F",
       "isLiving": false,
       "familiesAsSpouse": [
         "@F27@"
       ],
       "notes": [],
-      "marriedName": "Cosgrove",
+      "marriedName": "Stewart-Cosgrove",
       "birthDate": "FEB 1912",
       "birthPlace": "503 Springfield Avenue Philadelphia, Pa.",
       "familyAsChild": "@F33@"
@@ -2140,7 +2141,8 @@
         "@F32@"
       ],
       "notes": [
-        "Bio notes: Joseph was born on 14 May 1882. He lived in Shenandoah, Ward 3, util around 1930 when he moved to Philadelphia with his wife and three kids. He got married in Reading, Berks, PA in 1907. In 1947, he live there too. He died on 24 Sep 1947."
+        "Bio notes: Joseph was born on 14 May 1882. He lived in Shenandoah, Ward 3, util around 1930 when he moved to Philadelphia with his wife and three kids. He got married in Reading, Berks, PA in 1907. In 1947, he live there too. He died on 24 Sep 1947.",
+        "Married \"Lina\" (maiden name unknown) in Reading, Berks Co., PA in 1907. Marriage record searchable at rwills.co.berks.pa.us. Family moved from Shenandoah to Philadelphia ~1930 as coal industry declined."
       ],
       "marriedName": "Cosgrove",
       "birthDate": "14 MAY 1882",
@@ -2172,7 +2174,8 @@
         "@F69@"
       ],
       "notes": [
-        "Bio notes: Thomas was born in 1909 in Pennsylvania. He lived in Shenandoah Ward 3 from 1910-around 1930 when he and his family moved to Philadelphia. He later died on 16 Nov 1957."
+        "Bio notes: Thomas was born in 1909 in Pennsylvania. He lived in Shenandoah Ward 3 from 1910-around 1930 when he and his family moved to Philadelphia. He later died on 16 Nov 1957.",
+        "Died at age 48. Had no sons — only daughters. This is why the name passed to Roland."
       ],
       "marriedName": "Cosgrove",
       "birthDate": "1909",
@@ -2647,13 +2650,15 @@
         "@F87@"
       ],
       "notes": [
-        "Bio notes: Henry Shryock was an officer in the Revolutionary War. He was Lieutenant Colonel of the Sixth Battalion, under Colonel Otho Holland Williams. See McSherry's History of Maryland; page 382, Appendix B, and page 387, Appendix C."
+        "Bio notes: Henry Shryock was an officer in the Revolutionary War. He was Lieutenant Colonel of the Sixth Battalion, under Colonel Otho Holland Williams. See McSherry's History of Maryland; page 382, Appendix B, and page 387, Appendix C.",
+        "Sheriff Washington County 1789-92, MD House of Delegates 1788-89. Signer of MD ratification of Constitution April 28, 1788. Co-signed welcome address to President Washington Oct 1790.",
+        "CORRECTION: Previous parents \"Friedrick Von Schreyack\" and \"Hildergarde Von Schreyack\" were FABRICATED by Frank Kimball Leland (~1930s). Correct father: Jacob Schreyack (b.1714). Correct mother: Barbara Wolf. NOTE: The existing GEDCOM incorrectly lists Jacob Schreyack as Catherine's father — he was actually HENRY's father (Schreyack→Shryock name evolution). Catherine's maiden name was Soloday."
       ],
       "marriedName": "Shryock",
-      "birthDate": "2 OCT 1730",
-      "birthPlace": "Frederick Co. Md.",
-      "deathDate": "15 DEC 1799",
-      "deathPlace": "Frederick Co. Md.",
+      "birthDate": "ABT 1736",
+      "birthPlace": "Manchester Township, Lancaster County, PA",
+      "deathDate": "19 MAY 1814",
+      "deathPlace": "Shenandoah County, VA",
       "occupation": "Gentleman Farmer (Had a Big Farm With Slaves)",
       "familyAsChild": "@F88@"
     },
@@ -7820,7 +7825,8 @@
         "@F68@"
       ],
       "notes": [
-        "Bio notes: When James J. Cosgrove was born in 1841, his father, Patrick, was 22 and his mother, Ellen, was 21. He married Winifred Gibbons in September 1870 in Shuylkill, PA. They had nine children in 16 years. He died on December 21, 1891, in Shenandoah, PA, at the age of 50, and was buried there."
+        "Bio notes: When James J. Cosgrove was born in 1841, his father, Patrick, was 22 and his mother, Ellen, was 21. He married Winifred Gibbons in September 1870 in Shuylkill, PA. They had nine children in 16 years. He died on December 21, 1891, in Shenandoah, PA, at the age of 50, and was buried there.",
+        "Birthplace \"Cork, Buttevant Ireland\" — likely Cavan-to-Cork via Buttevant military barracks. Listed in 1881 Munsell History of Schuylkill County under \"Regiments of Numbers Not Known\". Absent from T288 pension index and 1883 pension roll — likely served <90 days in 1863 emergency militia."
       ],
       "marriedName": "Cosgrove",
       "birthDate": "1841",
@@ -7874,7 +7880,8 @@
         "@F205@"
       ],
       "notes": [
-        "Bio notes: When John Francis Cosgrove was born on June 19, 1883. in Shenandoah, PA, his father, James, was 32, and his mother, Winifred, was 24. He had 7 brothers and one sister. He married Sophia Barth on June 7th, 1906, in Delaware, and had one kid during their marriage. He went to fight in the Spanish American War and served in the military on April 1, 1901, in San Francisco, CA, when he was 27 years old. He died on June 14, 1933, in Philadelphia, PA, at the age of 59."
+        "Bio notes: When John Francis Cosgrove was born on June 19, 1883. in Shenandoah, PA, his father, James, was 32, and his mother, Winifred, was 24. He had 7 brothers and one sister. He married Sophia Barth on June 7th, 1906, in Delaware, and had one kid during their marriage. He went to fight in the Spanish American War and served in the military on April 1, 1901, in San Francisco, CA, when he was 27 years old. He died on June 14, 1933, in Philadelphia, PA, at the age of 59.",
+        "Birth year confirmed as 1873 (not 1883). Spanish-American War service — stationed San Francisco/Angel Island 1901 at age 27."
       ],
       "marriedName": "Cosgrove",
       "birthDate": "19 JUN 1873",
@@ -7900,7 +7907,6 @@
       "birthPlace": "Shenandoah, PA",
       "deathDate": "7 DEC 1955",
       "deathPlace": "Shenandoah, PA",
-      "occupation": "",
       "familyAsChild": "@F68@"
     },
     {
@@ -7947,7 +7953,8 @@
         "@F204@"
       ],
       "notes": [
-        "Bio notes: When William James Cosgrove was born on April 16, 1880, in Shenandoah, PA, his father, James, was 39 and his mother, inifred, was 30. He married Anna King in 1906. They had six children in 10 years. He died on November 20, 1976, in his hometown at the age of 96, and was buried there."
+        "Bio notes: When William James Cosgrove was born on April 16, 1880, in Shenandoah, PA, his father, James, was 39 and his mother, inifred, was 30. He married Anna King in 1906. They had six children in 10 years. He died on November 20, 1976, in his hometown at the age of 96, and was buried there.",
+        "Lived to age 96, apparently never married, no known children. Private, stationed Angel Island, CA, Mar 22, 1902 (Spanish-American War)."
       ],
       "marriedName": "Cosgrove",
       "birthDate": "16 APR 1880",
@@ -8038,8 +8045,12 @@
       "surname": "Cosgrove",
       "sex": "M",
       "isLiving": false,
-      "familiesAsSpouse": [],
-      "notes": [],
+      "familiesAsSpouse": [
+        "@F220@"
+      ],
+      "notes": [
+        "Philadelphia (Kensington/Port Richmond area), later Bridgeport NJ area."
+      ],
       "marriedName": "Cosgrove",
       "birthDate": "29 OCT 1905",
       "deathDate": "21 JUL 1967",
@@ -8068,7 +8079,9 @@
       "sex": "M",
       "isLiving": false,
       "familiesAsSpouse": [],
-      "notes": [],
+      "notes": [
+        "UNCONFIRMED: May be same as Robert J. Cosgrove Sr. of West Chester, PA (wife Elizabeth M.). If confirmed, had 7 children: Pat (m. Bonner), Jim (wife Mary O'Reilly), Robert Jr. (1950-2013, PhD Temple, Carnegie Mellon), Pam (m. Ward), Eileen (m. Stevenson), Cathy, Beth Hope."
+      ],
       "marriedName": "Cosgrove",
       "birthDate": "7 JAN 1914",
       "birthPlace": "Shenandoah, Schuylkill, PA",
@@ -8236,7 +8249,8 @@
         "@F201@"
       ],
       "notes": [
-        "Bio notes: When Patrick Cosgrove was born in 1819 in Cavan, Ireland, his father, John, was 39. He married Ellen Fitzgerald in 1840 in Ireland. They had five children in 19 years. He moved to Philadelphia, PA, on April 15, 1847. He died on November 24, 1873, at the age of 54, and was buried at Saint Vincent de Paul Cemetery #1 in Minersville, PA."
+        "Bio notes: When Patrick Cosgrove was born in 1819 in Cavan, Ireland, his father, John, was 39. He married Ellen Fitzgerald in 1840 in Ireland. They had five children in 19 years. He moved to Philadelphia, PA, on April 15, 1847. He died on November 24, 1873, at the age of 54, and was buried at Saint Vincent de Paul Cemetery #1 in Minersville, PA.",
+        "Arrived Philadelphia April 15, 1847 (during Great Famine). Ship manifest likely on NARA Microfilm M425, Reel 64. Settled in Minersville, PA. Died Nov 24, 1873. Buried Saint Vincent de Paul Cemetery #1. NOT killed by Molly Maguires — likely died from cumulative mining work effects at age 54."
       ],
       "marriedName": "Cosgrove",
       "birthDate": "1819",
@@ -8665,7 +8679,9 @@
         "@F89@",
         "@F210@"
       ],
-      "notes": [],
+      "notes": [
+        "CORRECTION: Jacob Schreyack was HENRY Shryock's father, not Catherine's. Catherine's maiden name was Soloday. The Schreyack→Shryock surname evolution passed through Henry, not Catherine."
+      ],
       "marriedName": "Schreyack",
       "birthDate": "3 FEB 1714",
       "birthPlace": "Birkenweißbuch, Rems-Murr-Kreis, Baden-Wuerttemberg, Germany",
@@ -9616,6 +9632,239 @@
       ],
       "marriedName": "Mcnicholas",
       "familyAsChild": "@F66@"
+    },
+    {
+      "id": "@I742@",
+      "givenName": "Marie",
+      "surname": "Kelly",
+      "sex": "F",
+      "isLiving": false,
+      "familiesAsSpouse": [
+        "@F220@"
+      ],
+      "notes": []
+    },
+    {
+      "id": "@I743@",
+      "givenName": "John Patrick \"Jack\"",
+      "surname": "Cosgrove",
+      "sex": "M",
+      "isLiving": false,
+      "familiesAsSpouse": [
+        "@F221@"
+      ],
+      "notes": [
+        "Buried SS Peter & Paul Cemetery, Springfield, PA.",
+        "Northeast Catholic High School 1953, University of Pennsylvania.",
+        "US Marine Corps, 30+ years at Rohm and Haas Company, Philadelphia."
+      ],
+      "birthDate": "12 MAY 1935",
+      "birthPlace": "Philadelphia, PA",
+      "deathDate": "2 FEB 2016",
+      "deathPlace": "North Myrtle Beach, SC",
+      "familyAsChild": "@F220@"
+    },
+    {
+      "id": "@I744@",
+      "givenName": "Arlene",
+      "surname": "Cosgrove",
+      "sex": "F",
+      "isLiving": false,
+      "familiesAsSpouse": [],
+      "notes": [
+        "Died in childhood before 1945. Appears in 1940 census but not later records."
+      ],
+      "birthDate": "ABT 1938",
+      "familyAsChild": "@F220@"
+    },
+    {
+      "id": "@I745@",
+      "givenName": "Jim",
+      "surname": "Cosgrove",
+      "sex": "M",
+      "isLiving": true,
+      "familiesAsSpouse": [],
+      "notes": [
+        "John J.'s third son. Possibly still living (age ~84-85 in 2026)."
+      ],
+      "birthDate": "ABT 1941",
+      "familyAsChild": "@F220@"
+    },
+    {
+      "id": "@I746@",
+      "givenName": "Michael",
+      "surname": "Cosgrove",
+      "sex": "M",
+      "isLiving": false,
+      "familiesAsSpouse": [
+        "@F224@"
+      ],
+      "notes": [
+        "Son of John J. and Marie Kelly Cosgrove. Died before December 2014. Cinnaminson, NJ area."
+      ],
+      "birthDate": "JUN 1942",
+      "birthPlace": "Philadelphia, PA",
+      "familyAsChild": "@F220@"
+    },
+    {
+      "id": "@I747@",
+      "givenName": "Maureen",
+      "surname": "Cosgrove",
+      "sex": "F",
+      "isLiving": false,
+      "familiesAsSpouse": [],
+      "notes": [
+        "Daughter of John J. Cosgrove. Married Cappello."
+      ],
+      "familyAsChild": "@F220@"
+    },
+    {
+      "id": "@I748@",
+      "givenName": "Patricia",
+      "surname": "Cosgrove",
+      "sex": "F",
+      "isLiving": false,
+      "familiesAsSpouse": [],
+      "notes": [
+        "Daughter of John J. Cosgrove. Married McLaughlin."
+      ],
+      "familyAsChild": "@F220@"
+    },
+    {
+      "id": "@I749@",
+      "givenName": "Germaine Joan",
+      "surname": "Latsko",
+      "sex": "F",
+      "isLiving": false,
+      "familiesAsSpouse": [
+        "@F221@"
+      ],
+      "notes": [],
+      "marriedName": "Cosgrove",
+      "birthDate": "1939",
+      "deathDate": "2012"
+    },
+    {
+      "id": "@I750@",
+      "givenName": "J. Keith",
+      "surname": "Cosgrove",
+      "sex": "M",
+      "isLiving": true,
+      "familiesAsSpouse": [],
+      "notes": [
+        "Lives in Wilmington, DE. Wife: Karen. No children found — all 3 of Jack's grandchildren are Beth's kids (Conleys)."
+      ],
+      "occupation": "IT Program Manager at Amtrak",
+      "familyAsChild": "@F221@"
+    },
+    {
+      "id": "@I751@",
+      "givenName": "Beth",
+      "surname": "Cosgrove",
+      "sex": "F",
+      "isLiving": true,
+      "familiesAsSpouse": [],
+      "notes": [
+        "Daughter of Jack Cosgrove. Married Jim Conley, West Chester, PA. Children: Cara, Ryan, Eric Conley."
+      ],
+      "marriedName": "Conley",
+      "familyAsChild": "@F221@"
+    },
+    {
+      "id": "@I752@",
+      "givenName": "James J. Jr.",
+      "surname": "Cosgrove",
+      "sex": "M",
+      "isLiving": true,
+      "familiesAsSpouse": [
+        "@F223@"
+      ],
+      "notes": [
+        "Son of Jim Cosgrove. Lives Chestnut Hill/Wayne area, Philadelphia. Parish Finance Council at Our Mother of Consolation."
+      ],
+      "familyAsChild": "@F222@"
+    },
+    {
+      "id": "@I753@",
+      "givenName": "Diana",
+      "surname": "",
+      "sex": "F",
+      "isLiving": true,
+      "familiesAsSpouse": [
+        "@F223@"
+      ],
+      "notes": [
+        "Wife of James J. Cosgrove Jr. Maiden surname unknown."
+      ],
+      "marriedName": "Cosgrove"
+    },
+    {
+      "id": "@I754@",
+      "givenName": "JJ",
+      "surname": "Cosgrove",
+      "sex": "M",
+      "isLiving": true,
+      "familiesAsSpouse": [],
+      "notes": [
+        "James J. Cosgrove III. Identified in Aug 2025 Philadelphia Inquirer as rising 8th grader at OMC school.",
+        "POTENTIAL NAME KEEPER — if Jim's line is confirmed senior to Michael's.",
+        "Has 2 additional siblings at OMC school (names/genders unknown)."
+      ],
+      "birthDate": "ABT 2011",
+      "familyAsChild": "@F223@"
+    },
+    {
+      "id": "@I755@",
+      "givenName": "Rosemary",
+      "surname": "",
+      "sex": "F",
+      "isLiving": true,
+      "familiesAsSpouse": [
+        "@F224@"
+      ],
+      "notes": [
+        "Wife of Michael Cosgrove Sr. Later Cosgrove-Schuler after remarrying George E. Schuler Jr. Maiden name unknown."
+      ],
+      "marriedName": "Cosgrove"
+    },
+    {
+      "id": "@I756@",
+      "givenName": "Michael J. Jr.",
+      "surname": "Cosgrove",
+      "sex": "M",
+      "isLiving": false,
+      "familiesAsSpouse": [],
+      "notes": [
+        "Son of Michael Sr. Wife: Deborah. Sons: Michael J. III, Christopher. Obituary: Bradley Funeral Home, Marlton NJ."
+      ],
+      "birthDate": "19 DEC 1962",
+      "deathDate": "9 DEC 2014",
+      "deathPlace": "Cinnaminson/Marlton, NJ",
+      "familyAsChild": "@F224@"
+    },
+    {
+      "id": "@I757@",
+      "givenName": "Brian",
+      "surname": "Cosgrove",
+      "sex": "M",
+      "isLiving": true,
+      "familiesAsSpouse": [],
+      "notes": [
+        "Son of Michael Sr. (Patrick Henry line — NOT Brian son of Robert). Wife: Cynthia. Southampton, NJ. Son: Christian (US Navy vet), daughter: Lauryn."
+      ],
+      "familyAsChild": "@F224@"
+    },
+    {
+      "id": "@I758@",
+      "givenName": "Debby",
+      "surname": "Cosgrove",
+      "sex": "F",
+      "isLiving": true,
+      "familiesAsSpouse": [],
+      "notes": [
+        "Daughter of Michael Sr. Married Matthew Corr. Cinnaminson/Moorestown NJ."
+      ],
+      "familyAsChild": "@F224@"
     }
   ],
   "families": [
@@ -11734,6 +11983,54 @@
       ],
       "husbandId": "@I714@",
       "wifeId": "@I713@"
+    },
+    {
+      "id": "@F220@",
+      "childIds": [
+        "@I743@",
+        "@I744@",
+        "@I745@",
+        "@I746@",
+        "@I747@",
+        "@I748@"
+      ],
+      "husbandId": "@I622@",
+      "wifeId": "@I742@"
+    },
+    {
+      "id": "@F221@",
+      "childIds": [
+        "@I750@",
+        "@I751@"
+      ],
+      "husbandId": "@I743@",
+      "wifeId": "@I749@",
+      "marriageDate": "1961"
+    },
+    {
+      "id": "@F222@",
+      "childIds": [
+        "@I752@"
+      ],
+      "husbandId": "@I745@"
+    },
+    {
+      "id": "@F223@",
+      "childIds": [
+        "@I754@"
+      ],
+      "husbandId": "@I752@",
+      "wifeId": "@I753@"
+    },
+    {
+      "id": "@F224@",
+      "childIds": [
+        "@I756@",
+        "@I757@",
+        "@I758@"
+      ],
+      "husbandId": "@I746@",
+      "wifeId": "@I755@"
     }
   ]
 }
