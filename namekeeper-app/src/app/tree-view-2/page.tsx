@@ -770,7 +770,7 @@ function ZoomToolbar({
   const pct = Math.round(zoom * 100);
 
   return (
-    <div className="absolute bottom-3 right-3 z-10 flex flex-row items-center bg-white/95 backdrop-blur-sm rounded-xl border border-slate-200/80 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_4px_12px_-2px_rgba(15,23,42,0.08)] px-1.5">
+    <div className="absolute bottom-3 right-3 z-10 w-80 flex flex-row items-center justify-between bg-white/95 backdrop-blur-sm rounded-xl border border-slate-200/80 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_4px_12px_-2px_rgba(15,23,42,0.08)] px-1.5">
       <ToolBtn label="Zoom out" onClick={() => zoomOut({ duration: 200 })}>
         <MinusIcon />
       </ToolBtn>
