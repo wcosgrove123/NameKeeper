@@ -82,18 +82,22 @@ function SurnameSprite({
 
   // Size proportional to weight — larger surnames = bigger text
   const fontSize = 28 + entry.weight * 72; // 28–100 px
-  const opacity = 0.12 + entry.weight * 0.55; // 0.12–0.67
+  // Depth-based opacity: closer sprites (higher z) feel more present
+  const depthBoost = (position[2] + 4) / 8; // 0..1 across z range
+  const baseOpacity = 0.1 + entry.weight * 0.5 + depthBoost * 0.18;
 
   const texture = useMemo(
-    () => makeTextTexture(entry.name, fontSize, '#475569'),
+    () => makeTextTexture(entry.name, fontSize, '#78716c'),
     [entry.name, fontSize],
   );
 
   const scale = useMemo((): [number, number, number] => {
     const aspect = texture.image.width / texture.image.height;
-    const h = 0.6 + entry.weight * 1.8;
+    // Depth-based scale: closer = larger, gives real parallax feel
+    const depthScale = 1 + depthBoost * 0.25;
+    const h = (0.6 + entry.weight * 1.8) * depthScale;
     return [h * aspect, h, 1];
-  }, [texture, entry.weight]);
+  }, [texture, entry.weight, depthBoost]);
 
   useFrame(({ clock }) => {
     if (!ref.current) return;
@@ -101,13 +105,13 @@ function SurnameSprite({
     ref.current.position.set(
       startPos.current.x + Math.sin(t * drift[0] + phase[0]) * 0.4,
       startPos.current.y + Math.cos(t * drift[1] + phase[1]) * 0.3,
-      startPos.current.z + Math.sin(t * drift[2] + phase[2]) * 0.15,
+      startPos.current.z + Math.sin(t * drift[2] + phase[2]) * 0.35,
     );
   });
 
   return (
     <sprite ref={ref} position={position} scale={scale}>
-      <spriteMaterial map={texture} transparent opacity={opacity} depthWrite={false} />
+      <spriteMaterial map={texture} transparent opacity={baseOpacity} depthWrite={false} />
     </sprite>
   );
 }
@@ -162,7 +166,7 @@ function SmokeParticles() {
     <points ref={ref} geometry={geometry}>
       <pointsMaterial
         size={1.2}
-        color="#cbd5e1"
+        color="#d6d3d1"
         transparent
         opacity={0.18}
         sizeAttenuation
@@ -175,6 +179,17 @@ function SmokeParticles() {
 /* ------------------------------------------------------------------ */
 /*  3-D Scene                                                          */
 /* ------------------------------------------------------------------ */
+
+function CameraRig() {
+  const { camera, mouse } = useThree();
+  useFrame(() => {
+    // Subtle parallax — camera drifts toward mouse, giving depth illusion
+    camera.position.x += (mouse.x * 1.2 - camera.position.x) * 0.04;
+    camera.position.y += (mouse.y * 0.8 - camera.position.y) * 0.04;
+    camera.lookAt(0, 0, 0);
+  });
+  return null;
+}
 
 function Scene({ surnames }: { surnames: SurnameEntry[] }) {
   // Get actual visible world-space dimensions from camera
@@ -223,7 +238,7 @@ function Scene({ surnames }: { surnames: SurnameEntry[] }) {
         x *= scale;
         y *= scale;
       }
-      const z = (Math.random() - 0.5) * 2.5; // thin z-axis
+      const z = (Math.random() - 0.5) * 7; // deep z-axis for parallax
       // Wide frequency range + random phase so no two names move in sync
       const drift: [number, number, number] = [
         0.08 + Math.random() * 0.5,
@@ -242,6 +257,7 @@ function Scene({ surnames }: { surnames: SurnameEntry[] }) {
   return (
     <>
       <ambientLight intensity={1} />
+      <CameraRig />
       <SmokeParticles />
       {placed.map((item, i) => (
         <SurnameSprite key={item.entry.name} {...item} />
@@ -442,7 +458,7 @@ export default function TreeView2Landing({ data, onSelectPerson }: TreeView2Land
   const surnames = useMemo(() => buildSurnameList(data), [data]);
 
   return (
-    <div className="fixed inset-0 z-40" style={{ background: '#f8fafc' }}>
+    <div className="fixed inset-0 z-40" style={{ background: '#faf7f0' }}>
       {/* Three.js canvas — full screen behind everything */}
       <div className="absolute inset-0">
         <Canvas
@@ -454,6 +470,15 @@ export default function TreeView2Landing({ data, onSelectPerson }: TreeView2Land
           <Scene surnames={surnames} />
         </Canvas>
       </div>
+
+      {/* Radial fade — softens the cloud behind the search card */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(ellipse 540px 360px at center, rgba(250,247,240,0.92) 0%, rgba(250,247,240,0.55) 45%, rgba(250,247,240,0) 75%)',
+        }}
+      />
 
       {/* Glassmorphic search overlay */}
       <SearchOverlay data={data} onSelectPerson={onSelectPerson} />
