@@ -6,6 +6,26 @@ import { CytoElement, getNameKeeperStylesheet } from '@/lib/tree-layout';
 import { Person } from '@/lib/types';
 import { useFamilyTreeStore } from '@/lib/store';
 import { computeFamilyLayout } from '@/lib/family-layout';
+import { computeCascadeWaves, CascadeWaves } from '@/lib/cascadeWaves';
+
+// Cascade reveal timing — adjust freely.
+const CASCADE_WAVE_INTERVAL_MS = 640;
+const CASCADE_NODE_FADE_MS = 560;
+const CASCADE_EDGE_TRACE_MS = 560;
+const CASCADE_WITHIN_WAVE_STAGGER_MS = 80;
+const CASCADE_FIT_DURATION_MS = 700;
+const CASCADE_FINAL_FIT_DURATION_MS = 600;
+
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+interface CascadeState {
+  timeouts: ReturnType<typeof setTimeout>[];
+  cancelled: boolean;
+  active: boolean;
+}
 
 let dagreRegistered = false;
 
@@ -43,6 +63,9 @@ export default function FamilyTree({ elements, spousePairs, junctionIds, patriar
   const positionRedoStack = useRef<Array<Record<string, { x: number; y: number }>>>([]);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [isLayoutReady, setIsLayoutReady] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const cascadeRef = useRef<CascadeState | null>(null);
+  const lastAnimatedSurnameRef = useRef<string | undefined>(undefined);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<string[]>([]);
@@ -275,19 +298,173 @@ export default function FamilyTree({ elements, spousePairs, junctionIds, patriar
       }
     });
 
-    // Initial fit then animate into view
-    cy.fit(undefined, 50);
-    setZoomLevel(cy.zoom());
+    // Cancel any in-flight cascade from a previous surname.
+    if (cascadeRef.current) {
+      cascadeRef.current.cancelled = true;
+      cascadeRef.current.active = false;
+      cascadeRef.current.timeouts.forEach((t) => clearTimeout(t));
+      cascadeRef.current = null;
+    }
 
-    // Slight zoom-out + fade-in effect for a polished entrance
-    const targetZoom = cy.zoom();
-    cy.zoom(targetZoom * 0.92);
-    cy.animate({
-      zoom: targetZoom,
-    }, { duration: 400, easing: 'ease-out-cubic' });
+    // Decide whether to run the cascade reveal animation.  We only animate
+    // when the *surname* changes, so toggling what-if or editing a person
+    // doesn't replay the whole sequence.
+    const shouldCascade =
+      !!patriarchId &&
+      !!data &&
+      !!selectedSurname &&
+      lastAnimatedSurnameRef.current !== selectedSurname &&
+      !prefersReducedMotion();
 
-    setIsLayoutReady(true);
-    updateGrid();
+    let waves: CascadeWaves | null = null;
+    if (shouldCascade && patriarchId && data) {
+      try {
+        waves = computeCascadeWaves(cy, patriarchId, data);
+      } catch (err) {
+        console.error('computeCascadeWaves failed', err);
+        waves = null;
+      }
+    }
+
+    if (waves && waves.totalWaves > 1) {
+      // Hide every element and prime edges with a dashed-offset pattern so
+      // they can "trace" from source to target on reveal.
+      cy.elements().style('opacity', 0);
+      cy.edges().forEach((edge) => {
+        const src = edge.sourceEndpoint();
+        const tgt = edge.targetEndpoint();
+        // Taxi/straight edges have manhattan length equal to |dx|+|dy|; pad
+        // slightly so the final dash fully covers the edge.
+        const len = Math.max(40, Math.abs(tgt.x - src.x) + Math.abs(tgt.y - src.y) + 30);
+        edge.scratch('_traceLen', len);
+        edge.style({
+          'line-style': 'dashed',
+          'line-dash-pattern': [len, len],
+          'line-dash-offset': len,
+        });
+      });
+
+      // Zoom onto the patriarch with generous padding — the camera pulls back
+      // as each wave adds nodes.
+      const patriarchNode = cy.getElementById(patriarchId!);
+      if (patriarchNode.length > 0) {
+        cy.fit(patriarchNode, 400);
+      } else {
+        cy.fit(undefined, 50);
+      }
+      setZoomLevel(cy.zoom());
+
+      setIsLayoutReady(true);
+      updateGrid();
+
+      // Kick off the cascade.
+      const state: CascadeState = { timeouts: [], cancelled: false, active: true };
+      cascadeRef.current = state;
+      setIsAnimating(true);
+      lastAnimatedSurnameRef.current = selectedSurname;
+
+      const nodesByWave = new Map<number, string[]>();
+      const edgesByWave = new Map<number, string[]>();
+      for (const [id, w] of waves.nodeWaves) {
+        if (!nodesByWave.has(w)) nodesByWave.set(w, []);
+        nodesByWave.get(w)!.push(id);
+      }
+      for (const [id, w] of waves.edgeWaves) {
+        if (!edgesByWave.has(w)) edgesByWave.set(w, []);
+        edgesByWave.get(w)!.push(id);
+      }
+
+      // Junction nodes have wave 0 but no visible opacity impact — reveal
+      // them instantly so edges can render normally.
+      cy.nodes('[nodeType="family-junction"]').style('opacity', 1);
+
+      for (let waveIdx = 0; waveIdx < waves.totalWaves; waveIdx++) {
+        const delay = waveIdx * CASCADE_WAVE_INTERVAL_MS;
+        const capturedWave = waveIdx;
+        const t = setTimeout(() => {
+          if (state.cancelled) return;
+
+          const nodeIds = nodesByWave.get(capturedWave) || [];
+          const edgeIds = edgesByWave.get(capturedWave) || [];
+
+          nodeIds.forEach((id, i) => {
+            const node = cy.getElementById(id);
+            if (node.length === 0) return;
+            if (node.data('nodeType') !== 'person') return;
+            const inner = setTimeout(() => {
+              if (state.cancelled) return;
+              node.animate(
+                { style: { opacity: 1 } },
+                { duration: CASCADE_NODE_FADE_MS, easing: 'ease-out-cubic' },
+              );
+            }, i * CASCADE_WITHIN_WAVE_STAGGER_MS);
+            state.timeouts.push(inner);
+          });
+
+          edgeIds.forEach((id, i) => {
+            const edge = cy.getElementById(id);
+            if (edge.length === 0) return;
+            const inner = setTimeout(() => {
+              if (state.cancelled) return;
+              edge.style('opacity', 1);
+              edge.animate(
+                { style: { 'line-dash-offset': 0 } },
+                {
+                  duration: CASCADE_EDGE_TRACE_MS,
+                  easing: 'ease-out-cubic',
+                  complete: () => {
+                    edge.removeStyle('line-style line-dash-pattern line-dash-offset');
+                  },
+                },
+              );
+            }, i * CASCADE_WITHIN_WAVE_STAGGER_MS);
+            state.timeouts.push(inner);
+          });
+
+          // Progressive fit: re-frame to include everything revealed so far.
+          const revealed = cy.nodes('[nodeType="person"]').filter((n) => {
+            const wv = waves!.nodeWaves.get(n.id());
+            return wv !== undefined && wv <= capturedWave;
+          });
+          if (revealed.length > 0) {
+            cy.stop(true, false);
+            cy.animate(
+              { fit: { eles: revealed, padding: 80 } },
+              { duration: CASCADE_FIT_DURATION_MS, easing: 'ease-in-out-cubic' },
+            );
+          }
+        }, delay);
+        state.timeouts.push(t);
+      }
+
+      // Finalize after the last wave completes its trace animation.
+      const finalDelay =
+        waves.totalWaves * CASCADE_WAVE_INTERVAL_MS + CASCADE_EDGE_TRACE_MS + 120;
+      const finalT = setTimeout(() => {
+        if (state.cancelled) return;
+        state.active = false;
+        setIsAnimating(false);
+        cy.stop(true, false);
+        cy.animate(
+          { fit: { eles: cy.elements(), padding: 50 } },
+          { duration: CASCADE_FINAL_FIT_DURATION_MS, easing: 'ease-in-out-cubic' },
+        );
+      }, finalDelay);
+      state.timeouts.push(finalT);
+    } else {
+      // No animation — normal fit + gentle fade-in entrance.
+      cy.fit(undefined, 50);
+      setZoomLevel(cy.zoom());
+      const targetZoom = cy.zoom();
+      cy.zoom(targetZoom * 0.92);
+      cy.animate(
+        { zoom: targetZoom },
+        { duration: 400, easing: 'ease-out-cubic' },
+      );
+      setIsLayoutReady(true);
+      updateGrid();
+      if (selectedSurname) lastAnimatedSurnameRef.current = selectedSurname;
+    }
 
     // For dagre fallback only: snap nodes to grid
     if (!usePreset && !computedPositions) {
@@ -311,11 +488,41 @@ export default function FamilyTree({ elements, spousePairs, junctionIds, patriar
     if (containerRef.current) containerRef.current.style.cursor = 'grab';
 
     cyRef.current = cy;
-  }, [elements, onNodeClick, selectedSurname, getNodePositions, saveNodePositions]);
+  }, [elements, onNodeClick, selectedSurname, getNodePositions, saveNodePositions, data, patriarchId]);
+
+  // Skip the in-flight cascade and jump straight to the final layout.
+  const handleSkipAnimation = useCallback(() => {
+    const state = cascadeRef.current;
+    if (!state || !state.active) return;
+    state.cancelled = true;
+    state.active = false;
+    state.timeouts.forEach((t) => clearTimeout(t));
+    state.timeouts = [];
+    const cy = cyRef.current;
+    if (cy) {
+      cy.stop(true, false);
+      cy.elements().stop(true, true);
+      cy.elements().style('opacity', 1);
+      cy.edges().forEach((edge) => {
+        edge.removeStyle('line-style line-dash-pattern line-dash-offset');
+      });
+      cy.animate(
+        { fit: { eles: cy.elements(), padding: 50 } },
+        { duration: 350, easing: 'ease-in-out-cubic' },
+      );
+    }
+    setIsAnimating(false);
+  }, []);
 
   useEffect(() => {
     initCytoscape();
     return () => {
+      if (cascadeRef.current) {
+        cascadeRef.current.cancelled = true;
+        cascadeRef.current.active = false;
+        cascadeRef.current.timeouts.forEach((t) => clearTimeout(t));
+        cascadeRef.current = null;
+      }
       if (cyRef.current) {
         cyRef.current.destroy();
         cyRef.current = null;
@@ -684,6 +891,22 @@ export default function FamilyTree({ elements, spousePairs, junctionIds, patriar
             </svg>
           </button>
         </div>
+      )}
+
+      {/* Skip animation button — only shown while the cascade is running */}
+      {isAnimating && (
+        <button
+          onClick={handleSkipAnimation}
+          className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 bg-white/95 backdrop-blur-sm hover:bg-slate-50 active:bg-slate-100 shadow-lg border border-slate-200 rounded-full pl-3 pr-3.5 py-1.5 text-xs font-medium text-slate-700 cursor-pointer transition-colors"
+          aria-label="Skip animation"
+          title="Skip reveal animation"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-600">
+            <polygon points="5 4 15 12 5 20 5 4" />
+            <line x1="19" y1="5" x2="19" y2="19" />
+          </svg>
+          Skip animation
+        </button>
       )}
 
       {/* Zoom controls toolbar */}
