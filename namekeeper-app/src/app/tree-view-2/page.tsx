@@ -666,7 +666,7 @@ function TreeViewContent() {
 
         {/* Detail panel — floats over the tree, no docked sidebar background */}
         {selectedPerson && data && (
-          <div className="absolute top-3 right-3 bottom-3 z-10 flex items-start">
+          <div className="absolute top-3 right-3 bottom-16 z-10 flex items-start">
             <PersonSidePanel
               person={data.persons.get(selectedPerson.id) || selectedPerson}
               data={data}
