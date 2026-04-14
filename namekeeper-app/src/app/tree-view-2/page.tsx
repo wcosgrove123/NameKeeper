@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { Suspense, useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   useStore as useReactFlowStore,
@@ -745,9 +745,11 @@ function TreeViewContent() {
 
 export default function TreeViewPage() {
   return (
-    <ReactFlowProvider>
-      <TreeViewContent />
-    </ReactFlowProvider>
+    <Suspense fallback={<div className="flex-1 flex items-center justify-center bg-slate-50"><div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" /></div>}>
+      <ReactFlowProvider>
+        <TreeViewContent />
+      </ReactFlowProvider>
+    </Suspense>
   );
 }
 

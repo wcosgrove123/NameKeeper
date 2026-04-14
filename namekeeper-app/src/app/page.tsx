@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { Suspense, useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import GedcomUploader from '@/components/GedcomUploader';
 import FamilyTree from '@/components/FamilyTree';
@@ -18,7 +18,15 @@ import { useFamilyTreeStore } from '@/lib/store';
 import { READ_ONLY } from '@/lib/site-config';
 import { useAutoLoad } from '@/lib/use-auto-load';
 
-export default function Home() {
+export default function HomePage() {
+  return (
+    <Suspense fallback={<div className="flex-1 flex items-center justify-center bg-slate-50"><div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" /></div>}>
+      <Home />
+    </Suspense>
+  );
+}
+
+function Home() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: gedcomData, isLoaded, loadFromGedcom } = useFamilyTreeStore();
