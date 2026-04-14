@@ -1,5 +1,93 @@
 # Changelog
 
+## 2026-04-14 — Relationship mapper rewrite (Medium mode)
+
+Full rebuild of `src/lib/relationship-path-layout.ts`. The Relationship page
+used to draw only the direct path between two selected people — spine only,
+end-point siblings bolted on. It now renders everyone blood-related between
+them, one level of collateral depth, with proper couple ordering and
+collision-aware packing. Accompanying polish on `PersonNode.tsx` and the
+TreeView2 landing page.
+
+---
+
+### What it draws now
+
+- **LCA couple** at the top row (male-left / female-right). For direct-line
+  queries (one person ancestor of the other), the single LCA sits alone.
+- **Spine couples** on each row between LCA and endpoint. Spine position
+  within its couple is decided by the spine's sex, so male-left / female-right
+  holds even when the blood path zig-zags across sexes per generation.
+- **Spine siblings** at every non-endpoint row — the spine person's full
+  birth-family minus anyone already placed (e.g., the other chain's spine
+  in a cousin layout). Each sibling is drawn as a mini couple with their
+  first-marriage spouse.
+- **Spine siblings' kids** one row below each sibling couple. This is the
+  "no grandkids of siblings" rule — the user's first cousins (of that spine)
+  show up, but not their descendants.
+- **Endpoint siblings** (existing feature) rendered as a birth-ordered
+  group centered under the endpoint's parent couple junction.
+
+### Edge routing rules
+
+- **Descent OUT** of a row starts at the couple junction bottom — so the
+  line visibly emerges from the marriage midpoint between the two parents.
+- **Descent IN** to a row terminates at the spine person's top-center — so
+  the line plants into the middle of the blood child, not into an offset
+  junction dot.
+- All descent edges use `smoothstep` with `pathOptions.offset` so the
+  horizontal bend always lands inside the row-gap, never crossing a node
+  box. (The original code had bends at the mid-Y, which cut straight
+  through the text of intermediate nodes.)
+- Non-blood-path drops (spine siblings, cousins) use dashed neutral stroke;
+  blood-path drops use sex-colored solid stroke.
+
+### Layout packing
+
+- **Birth-order sort** — siblings ordered by parsed birth year ascending,
+  with file order as a stable tiebreaker. GEDCOM `childIds` isn't
+  guaranteed to be in birth order, so sorting explicitly is required.
+- **Dynamic chain spacing** — `CHAIN_CENTER_OFFSET` is computed from the
+  actual left/right endpoint kid-row widths so cousin chains never pack
+  their kid fans into each other.
+- **Row-level occupancy tracking** — every placement reserves a
+  `[left, right]` interval at its row's `gen`. Both the main vertical
+  column and each spine-sibling kid row get reserved.
+- **Two-gen collision-aware packing** — `findFreeCenter` looks at
+  reservations on BOTH the sibling's own row and the kid row one below,
+  computes the forbidden-center ranges (inflated by half-slot plus gap),
+  and walks from the anchor in the requested direction to the first gap.
+- **Bottom-up iteration** — rows are processed from endpoint upward. Lower
+  rows reserve their Piece 2 sibling slots first, so upper-row Piece 2
+  slots can be pushed further out to keep their cousin rows clear of the
+  lower rows' siblings.
+
+### Labels & highlights
+
+- Every placed person (except the start) gets a relationship label
+  computed via `calculateRelationship(personId, path.startId, data)` and
+  cached on a per-person basis. So the user's father reads "Father",
+  their 6th great-grandfather reads "6th Great-Grandfather", etc.
+- **Start person** highlights amber (`bg-amber-100 border-amber-500`) —
+  the existing "me" color.
+- **End person** highlights violet (new `isEndSelection` field on
+  `PersonNodeData`, styled in `PersonNode.tsx`). Works whether end is an
+  ancestor (direct-line case, end == LCA) or the other endpoint (cousin
+  case).
+
+### TreeView2 landing polish (bundled)
+
+- Camera rig drifts toward mouse cursor for subtle parallax on the 3D
+  surname cloud.
+- Wider z-axis range (2.5 → 7) for real depth feel; sprite opacity and
+  scale modulated by z so closer names are more prominent.
+- Warmer stone palette (`#faf7f0` background, `#78716c` sprites,
+  `#d6d3d1` smoke) replacing the cool slate.
+- Radial cream fade behind the glass search card so the sprite cloud
+  doesn't distract from the focal element.
+
+---
+
 ## 2026-04-14 — Side panel parity, relationships wizard, godparents
 
 A two-pass overhaul that brought the Tree View page up to feature parity with

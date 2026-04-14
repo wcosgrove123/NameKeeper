@@ -5,6 +5,95 @@ Each entry is short on purpose — the *why* matters more than the *what*.
 
 ---
 
+## Relationship mapper layout
+
+### React Flow smoothstep bends at midY by default — that's where your boxes are
+
+`smoothstep` edges route as `source → down → horizontal at midY → down → target`.
+If the two rows are back-to-back (small gap), the horizontal segment lands
+INSIDE the lower row and cuts straight through the node boxes. Two fixes
+needed: (a) widen the row gap, (b) set `pathOptions: { offset, borderRadius }`
+on the edge so the bend happens at `source + offset` instead of midY. This
+keeps the horizontal inside the inter-row gap.
+
+**Rule:** any smoothstep edge between rows in a family-tree-style layout
+needs `pathOptions.offset` set. Defaults are wrong for this shape.
+
+### Zero-width invisible handles + unchecked left/right swap = line through text
+
+The original spouse-connector code had a swapped argument:
+`addSpouseConnEdge(personId, junctionId, !spineIsLeft)` when it should have
+been `spineIsLeft`. With zero-width invisible handles, React Flow doesn't
+complain — it just routes from the wrong edge, and a "straight" edge type
+ends up going all the way through the node body to reach the opposite side
+handle. The "pink box struck-through" symptom was this — there was no CSS
+text-decoration, just a straight edge crossing the box.
+
+**Rule:** derive handle selection from actual x positions
+(`personCenterX < junctionCenterX`), not from a side flag that can invert.
+Writing `source handle` based on geometry instead of intent is
+bug-resistant.
+
+### `edge.pathOptions` IS forwarded to the edge component, but not in the exported `Edge` type
+
+`@xyflow/react`'s internal `EdgeWrapper` does
+`pathOptions: 'pathOptions' in edge ? edge.pathOptions : undefined` when
+rendering, so setting `pathOptions` on an edge object in your `edges` array
+works at runtime. But the exported `Edge` type doesn't include it, so TS
+complains. The typed `SmoothStepEdge` helper exists but is named the same
+as the runtime component export, so importing it as a type collides.
+
+**Rule:** declare a local type `type SmoothStepEdgeInput = Edge & { type:
+'smoothstep'; pathOptions?: {...} }` and cast when pushing.
+
+### GEDCOM `childIds` isn't guaranteed to be in birth order
+
+File order usually matches birth order because that's how most tools
+write GEDCOM, but it's not a requirement and real files break this.
+Sibling ordering logic based on array index gives the wrong answer
+whenever a child record was inserted out of order.
+
+**Rule:** sort by parsed birth year ascending with file order as a
+stable tiebreaker. There's a `sortByBirth` helper at the top of
+`relationship-path-layout.ts`. See also the comment in `lib/cascadeWaves.ts`.
+
+### Row packing for trees with variable-width subtrees needs two-gen collision checks
+
+Piece 2 (spine siblings at row N) and Piece 3 (row N sibling's kids at
+row N+1) both place nodes on shared row-Ys. Naively top-down iteration
+with per-row occupancy still collides, because a row N sibling's IDEAL
+position depends on what's at row N+1 — and at the time row N is
+processed, row N+1 hasn't been packed yet.
+
+Two fixes together:
+1. Iterate **bottom-up**, so the lower row's Piece 2 slots are reserved
+   before upper-row Piece 2 places its slots.
+2. When finding a free slot for a sibling at row N, check occupancy at
+   BOTH row N (the sibling couple slot) and row N+1 (the kid row one
+   below). Forbidden center ranges on the center x-axis get inflated
+   by `slotW/2 + gap` for same-row conflicts and `kidsW/2 + gap` for
+   kid-row conflicts, then merged, then walked from the anchor.
+
+**Rule:** any tree layout with collateral subtrees of variable depth
+needs a bottom-up pass with multi-row collision checks, not a fixed
+per-row packing.
+
+### Proximity of "center-under-parent" vs. "no-overlap" is the whole ballgame
+
+The visual anchor for a tree layout is "each child box is centered
+under its parent couple's junction". That's non-negotiable for
+readability. But when two sibling subtrees both want that ideal
+position, they collide. The Piece 4 algorithm resolves this by
+keeping center-under-parent as the default and only pushing outward
+when a collision is actually detected — first-come-first-served by
+bottom-up order.
+
+Alternate approaches considered and rejected: Walker's algorithm
+(too heavy for this shape), dagre (loses the "spine column" constraint),
+manual fixed offsets (breaks as soon as sibling count varies).
+
+---
+
 ## GEDCOM data-source quirks (Family Echo / Gramps exports)
 
 ### `_CURRENT` is a display flag, not a relationship status
