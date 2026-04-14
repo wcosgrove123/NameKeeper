@@ -70,14 +70,14 @@ export default function AppHeader() {
   ];
 
   return (
-    <header className="h-12 bg-white border-b border-slate-200 flex items-center px-4 gap-6 shrink-0">
+    <header className="h-12 bg-white border-b border-slate-200 flex items-center px-4 gap-6 shrink-0 whitespace-nowrap">
       {/* Logo */}
-      <div className="font-bold text-slate-800 text-sm whitespace-nowrap">
+      <div className="font-bold text-slate-800 text-sm shrink-0">
         NameKeeper
       </div>
 
       {/* Navigation tabs */}
-      <nav className="flex gap-1">
+      <nav className="flex gap-1 shrink-0">
         {navItems.map(item => (
           <Link
             key={item.href}
@@ -93,23 +93,43 @@ export default function AppHeader() {
         ))}
       </nav>
 
-      {/* Spacer */}
-      <div className="flex-1" />
+      {/* Spacer — this is the ONLY thing that absorbs slack in the row */}
+      <div className="flex-1 min-w-0" />
 
-      {/* Auth chrome — replaces the old bottom-right floating button */}
+      {/* File info */}
+      {data && (
+        <div className="flex items-center gap-3 text-xs text-slate-400 min-w-0 shrink">
+          <span
+            className="text-slate-500 truncate max-w-[160px]"
+            title={filename}
+          >
+            {filename}
+          </span>
+          <span className="shrink-0">{personCount} people</span>
+          <span className="shrink-0">{familyCount} families</span>
+          {isDirty && (
+            <span className="text-amber-500 font-medium shrink-0">Unsaved</span>
+          )}
+        </div>
+      )}
+
+      {/* Auth chrome — compact when signed in */}
       {user ? (
-        <div className="flex items-center gap-1.5 pr-2 mr-1 border-r border-slate-200 h-6">
+        <div className="flex items-center gap-1.5 shrink-0">
           <span
             className={`w-1.5 h-1.5 rounded-full ${isAdmin ? 'bg-amber-500' : 'bg-slate-300'}`}
-            title={isAdmin ? 'Signed in as admin — edits sync to Firestore' : 'Signed in (viewer only)'}
+            title={`${user.email} — ${isAdmin ? 'admin' : 'viewer'}`}
           />
-          <span className="text-[11px] text-slate-500 max-w-[160px] truncate">
-            {user.email}
+          <span
+            className="text-[11px] text-slate-500 max-w-[100px] truncate"
+            title={user.email || undefined}
+          >
+            {(user.email || '').split('@')[0]}
           </span>
           <button
             type="button"
             onClick={() => signOut()}
-            className="text-[10px] uppercase tracking-wider text-slate-400 hover:text-red-500 transition-colors ml-0.5"
+            className="text-[10px] uppercase tracking-wider text-slate-400 hover:text-red-500 transition-colors"
             title="Sign out"
           >
             Sign out
@@ -119,28 +139,16 @@ export default function AppHeader() {
         <button
           type="button"
           onClick={() => setSignInOpen(true)}
-          className="px-2.5 py-1 mr-2 text-xs font-medium text-slate-500 hover:text-amber-700 hover:bg-amber-50 border border-slate-200 hover:border-amber-200 rounded-md transition-colors"
+          className="shrink-0 px-2.5 py-1 text-xs font-medium text-slate-500 hover:text-amber-700 hover:bg-amber-50 border border-slate-200 hover:border-amber-200 rounded-md transition-colors"
           title="Admin sign in"
         >
           Sign in
         </button>
       )}
 
-      {/* File info */}
-      {data && (
-        <div className="flex items-center gap-3 text-xs text-slate-400">
-          <span className="text-slate-500">{filename}</span>
-          <span>{personCount} people</span>
-          <span>{familyCount} families</span>
-          {isDirty && (
-            <span className="text-amber-500 font-medium">Unsaved</span>
-          )}
-        </div>
-      )}
-
       {/* Actions — hidden in read-only mode */}
       {data && !READ_ONLY && (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={handleExportJson}
             className="px-2 py-1 text-xs text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded transition-colors"
