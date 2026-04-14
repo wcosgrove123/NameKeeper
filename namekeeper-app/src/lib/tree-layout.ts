@@ -368,7 +368,7 @@ export function getNameKeeperStylesheet(): any[] {
         'font-weight': 'bold',
       },
     },
-    // Extinct branch edges — dashed lines
+    // Extinct branch edges — dashed lines, rendered below all live lines.
     {
       selector: 'edge[removalFromPrime = -1]',
       style: {
@@ -376,6 +376,7 @@ export function getNameKeeperStylesheet(): any[] {
         'line-dash-pattern': [6, 4],
         'width': 1.5,
         'line-color': '#b0b8c4',
+        'z-index': 0,
       } as cytoscape.Css.Edge,
     },
     // Family junction nodes (invisible routing points)
@@ -404,7 +405,9 @@ export function getNameKeeperStylesheet(): any[] {
         'taxi-turn': 60,
       },
     },
-    // Spouse-to-junction edges (always horizontal — same Y level)
+    // Spouse-to-junction edges (always horizontal — same Y level).
+    // target-endpoint '0 0' forces the edge to terminate at the junction
+    // node's center so horizontal and vertical lines meet cleanly with no gap.
     {
       selector: 'edge[edgeType="spouse-to-junction"]',
       style: {
@@ -412,6 +415,7 @@ export function getNameKeeperStylesheet(): any[] {
         'line-color': '#94a3b8',
         'width': 1.5,
         'curve-style': 'straight',
+        'target-endpoint': '0 0',
       },
     },
     // Junction-to-child edges (vertical drop 1.5 blocks then horizontal fork)
@@ -422,6 +426,7 @@ export function getNameKeeperStylesheet(): any[] {
         'curve-style': 'taxi',
         'taxi-direction': 'downward',
         'taxi-turn': 60,
+        'source-endpoint': '0 0',
       },
     },
     // Legacy spouse edges — kept for compatibility
@@ -434,12 +439,15 @@ export function getNameKeeperStylesheet(): any[] {
         'curve-style': 'straight',
       },
     },
-    // Removal-based edge thickness (closer to prime = thicker, dramatic falloff)
+    // Removal-based edge thickness (closer to prime = thicker, dramatic
+    // falloff).  z-index rises with thickness so thicker prime-line edges
+    // always render on top of thinner far-branch edges where they cross.
     {
       selector: 'edge[removalFromPrime = 3]',
       style: {
         'width': 1.5,
         'line-color': '#94a3b8',
+        'z-index': 1,
       },
     },
     {
@@ -447,6 +455,7 @@ export function getNameKeeperStylesheet(): any[] {
       style: {
         'width': 2.5,
         'line-color': '#64748b',
+        'z-index': 2,
       },
     },
     {
@@ -454,6 +463,7 @@ export function getNameKeeperStylesheet(): any[] {
       style: {
         'width': 3.5,
         'line-color': '#475569',
+        'z-index': 3,
       },
     },
     {
@@ -461,6 +471,7 @@ export function getNameKeeperStylesheet(): any[] {
       style: {
         'width': 4.5,
         'line-color': '#334155',
+        'z-index': 4,
       },
     },
     // Succession path edges (gold, thickest) — overrides removal for prime line

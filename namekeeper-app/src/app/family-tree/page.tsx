@@ -408,7 +408,7 @@ export default function FamilyTreePage() {
 
         {/* Person detail */}
         {selectedPerson && !contextMenuPerson && !relationshipPersonA && (
-          <div className="absolute top-3 right-14 bottom-3 z-10 flex items-start">
+          <div className="absolute top-3 right-14 bottom-3 z-10 flex items-start w-80">
             <PersonSidePanel
               person={data.persons.get(selectedPerson.id) || selectedPerson}
               data={data}

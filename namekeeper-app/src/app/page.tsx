@@ -277,9 +277,10 @@ function Home() {
             onToggleWhatIf={toggleWhatIfMode}
           />
 
-          {/* Person detail popup */}
+          {/* Person detail popup — bounded so it clears the bottom-right
+              zoom toolbar (~52px tall + 12px margin + 12px gap = 76px). */}
           {selectedPerson && gedcomData && (
-            <div className="absolute top-3 right-3 z-10">
+            <div className="absolute top-3 right-3 bottom-[76px] z-10 w-[360px]">
               <PersonSidePanel
                 person={gedcomData.persons.get(selectedPerson.id) || selectedPerson}
                 data={gedcomData}

@@ -152,7 +152,7 @@ export default function PersonSidePanel({
   return (
     <>
       <div
-        className="bg-white rounded-xl border border-slate-200/80 w-80 max-h-full overflow-hidden flex flex-col transition-all duration-200 ease-out shadow-[0_1px_2px_rgba(15,23,42,0.04),0_4px_12px_-2px_rgba(15,23,42,0.08),0_24px_48px_-16px_rgba(15,23,42,0.18)]"
+        className="bg-white rounded-xl border border-slate-200/80 w-full max-h-full overflow-hidden flex flex-col transition-all duration-200 ease-out shadow-[0_1px_2px_rgba(15,23,42,0.04),0_4px_12px_-2px_rgba(15,23,42,0.08),0_24px_48px_-16px_rgba(15,23,42,0.18)]"
         style={{
           opacity: visible ? 1 : 0,
           transform: visible ? 'translateY(0) scale(1)' : 'translateY(-8px) scale(0.97)',

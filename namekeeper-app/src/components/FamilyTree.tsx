@@ -909,13 +909,13 @@ export default function FamilyTree({ elements, spousePairs, junctionIds, patriar
         </button>
       )}
 
-      {/* Zoom controls toolbar */}
+      {/* Zoom controls toolbar — horizontal, anchored bottom-right. */}
       {elements.length > 0 && isLayoutReady && (
-        <div className="absolute top-3 right-3 flex flex-col bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+        <div className="absolute bottom-3 right-3 flex flex-row items-stretch bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200 overflow-hidden">
           {/* Zoom in */}
           <button
             onClick={handleZoomIn}
-            className="p-2.5 hover:bg-slate-100 active:bg-slate-200 transition-colors cursor-pointer border-b border-slate-100"
+            className="p-2.5 hover:bg-slate-100 active:bg-slate-200 transition-colors cursor-pointer border-r border-slate-100"
             aria-label="Zoom in"
             title="Zoom in (+)"
           >
@@ -928,14 +928,14 @@ export default function FamilyTree({ elements, spousePairs, junctionIds, patriar
           </button>
 
           {/* Zoom level indicator */}
-          <div className="px-2.5 py-1.5 text-[11px] font-medium text-slate-500 text-center border-b border-slate-100 select-none">
+          <div className="px-2 flex items-center justify-center text-[11px] font-medium text-slate-500 border-r border-slate-100 select-none min-w-[40px]">
             {zoomPercent}%
           </div>
 
           {/* Zoom out */}
           <button
             onClick={handleZoomOut}
-            className="p-2.5 hover:bg-slate-100 active:bg-slate-200 transition-colors cursor-pointer border-b border-slate-100"
+            className="p-2.5 hover:bg-slate-100 active:bg-slate-200 transition-colors cursor-pointer border-r border-slate-100"
             aria-label="Zoom out"
             title="Zoom out (-)"
           >
@@ -947,12 +947,12 @@ export default function FamilyTree({ elements, spousePairs, junctionIds, patriar
           </button>
 
           {/* Divider */}
-          <div className="h-px bg-slate-200" />
+          <div className="w-px bg-slate-200" />
 
           {/* Fit all */}
           <button
             onClick={handleFitAll}
-            className="p-2.5 hover:bg-slate-100 active:bg-slate-200 transition-colors cursor-pointer border-b border-slate-100"
+            className="p-2.5 hover:bg-slate-100 active:bg-slate-200 transition-colors cursor-pointer border-r border-slate-100"
             aria-label="Fit all nodes"
             title="Fit entire tree (0)"
           >
@@ -964,7 +964,7 @@ export default function FamilyTree({ elements, spousePairs, junctionIds, patriar
           {/* Fit succession path */}
           <button
             onClick={handleFitSuccession}
-            className="p-2.5 hover:bg-amber-50 active:bg-amber-100 transition-colors cursor-pointer border-b border-slate-100"
+            className="p-2.5 hover:bg-amber-50 active:bg-amber-100 transition-colors cursor-pointer border-r border-slate-100"
             aria-label="Fit succession path"
             title="Fit succession path (S)"
           >
@@ -977,7 +977,7 @@ export default function FamilyTree({ elements, spousePairs, junctionIds, patriar
           {/* Center on Name Keeper */}
           <button
             onClick={handleFitNameKeeper}
-            className="p-2.5 hover:bg-red-50 active:bg-red-100 transition-colors cursor-pointer border-b border-slate-100"
+            className="p-2.5 hover:bg-red-50 active:bg-red-100 transition-colors cursor-pointer border-r border-slate-100"
             aria-label="Center on Name Keeper"
             title="Center on Name Keeper (K)"
           >
@@ -990,7 +990,7 @@ export default function FamilyTree({ elements, spousePairs, junctionIds, patriar
           {/* Center on Patriarch */}
           <button
             onClick={handleFitPatriarch}
-            className="p-2.5 hover:bg-amber-50 active:bg-amber-100 transition-colors cursor-pointer border-b border-slate-100"
+            className="p-2.5 hover:bg-amber-50 active:bg-amber-100 transition-colors cursor-pointer border-r border-slate-100"
             aria-label="Center on Patriarch"
             title="Center on Patriarch"
           >
@@ -1000,7 +1000,7 @@ export default function FamilyTree({ elements, spousePairs, junctionIds, patriar
           </button>
 
           {/* Divider */}
-          <div className="h-px bg-slate-200" />
+          <div className="w-px bg-slate-200" />
 
           {/* What-If toggle */}
           <button
@@ -1021,7 +1021,7 @@ export default function FamilyTree({ elements, spousePairs, junctionIds, patriar
           </button>
 
           {/* Divider */}
-          <div className="h-px bg-slate-200" />
+          <div className="w-px bg-slate-200" />
 
           {/* Reset Layout */}
           <button
@@ -1035,18 +1035,6 @@ export default function FamilyTree({ elements, spousePairs, junctionIds, patriar
               <path d="M3 3v5h5" />
             </svg>
           </button>
-        </div>
-      )}
-
-      {/* Keyboard shortcuts hint */}
-      {elements.length > 0 && isLayoutReady && (
-        <div className="absolute bottom-3 right-3 bg-white/80 backdrop-blur-sm rounded-lg px-3 py-2 text-[10px] text-slate-400 shadow-sm border border-slate-200">
-          <span className="font-medium text-slate-500">Shortcuts:</span>{' '}
-          <kbd className="px-1 py-0.5 bg-slate-100 rounded text-[9px]">+</kbd>/<kbd className="px-1 py-0.5 bg-slate-100 rounded text-[9px]">-</kbd> zoom
-          {' '}<kbd className="px-1 py-0.5 bg-slate-100 rounded text-[9px]">0</kbd> fit
-          {' '}<kbd className="px-1 py-0.5 bg-slate-100 rounded text-[9px]">K</kbd> keeper
-          {' '}<kbd className="px-1 py-0.5 bg-slate-100 rounded text-[9px]">S</kbd> succession
-          {' '}<kbd className="px-1 py-0.5 bg-slate-100 rounded text-[9px]">W</kbd> what-if
         </div>
       )}
 
