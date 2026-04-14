@@ -1,9 +1,22 @@
+/**
+ * Godparent reference. Either points to a Person already on the tree
+ * (`linked`) or stores a standalone name not represented in the family graph
+ * (`external`). External refs are visible only on their godchild's card.
+ */
+export type GodparentRef =
+  | { kind: 'linked'; personId: string }
+  | { kind: 'external'; givenName: string; surname: string; sex: 'M' | 'F' | 'U' };
+
 export interface Person {
   id: string;
   givenName: string;
+  middleNames?: string;
   surname: string;
+  surnameAtBirth?: string;
+  suffix?: string;
   marriedName?: string;
   nickname?: string;
+  title?: string;
   sex: 'M' | 'F' | 'U';
   birthDate?: string;
   birthPlace?: string;
@@ -11,6 +24,18 @@ export interface Person {
   deathPlace?: string;
   isLiving: boolean;
   occupation?: string;
+  company?: string;
+  email?: string;
+  website?: string;
+  homeTel?: string;
+  workTel?: string;
+  mobile?: string;
+  address?: string;
+  interests?: string;
+  activities?: string;
+  bioNotes?: string;
+  photoUrl?: string;
+  godparents?: GodparentRef[];
   familiesAsSpouse: string[];
   familyAsChild?: string;
   notes: string[];
@@ -23,7 +48,10 @@ export interface Family {
   childIds: string[];
   marriageDate?: string;
   marriagePlace?: string;
+  /** Family Echo display-preference flag (_CURRENT tag). NOT a relationship status. */
   isCurrent?: boolean;
+  /** True if the couple divorced or separated (GEDCOM DIV or _SEPR). */
+  divorced?: boolean;
 }
 
 export interface GedcomData {

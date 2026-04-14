@@ -22,6 +22,8 @@ export interface PersonNodeData {
   hasParents: boolean;
   hasChildren: boolean;
   relationshipLabel?: string;
+  /** When the currently-selected person has THIS node as a godparent. */
+  isGodparentOfSelected?: boolean;
 }
 
 function PersonNodeComponent({ data }: NodeProps) {
@@ -41,15 +43,23 @@ function PersonNodeComponent({ data }: NodeProps) {
 
   const bgColor = d.isSelected
     ? 'bg-amber-100 border-amber-500'
-    : isMale
-      ? d.isLiving
-        ? 'bg-blue-50 border-blue-300'
-        : 'bg-blue-50/50 border-blue-200'
-      : isFemale
+    : d.isGodparentOfSelected
+      ? isMale
+        ? 'bg-blue-50 border-blue-600'
+        : isFemale
+          ? 'bg-pink-50 border-pink-600'
+          : 'bg-slate-50 border-slate-500'
+      : isMale
         ? d.isLiving
-          ? 'bg-pink-50 border-pink-300'
-          : 'bg-pink-50/50 border-pink-200'
-        : 'bg-gray-50 border-gray-300';
+          ? 'bg-blue-50 border-blue-300'
+          : 'bg-blue-50/50 border-blue-200'
+        : isFemale
+          ? d.isLiving
+            ? 'bg-pink-50 border-pink-300'
+            : 'bg-pink-50/50 border-pink-200'
+          : 'bg-gray-50 border-gray-300';
+
+  const borderWidth = d.isGodparentOfSelected ? 'border-[3px]' : 'border-2';
 
   const textColor = d.isLiving ? 'text-slate-800' : 'text-slate-400';
 
@@ -85,13 +95,15 @@ function PersonNodeComponent({ data }: NodeProps) {
       {/* Handles */}
       <Handle type="target" position={Position.Top} id="top" className="!bg-transparent !border-0 !w-0 !h-0" />
       <Handle type="source" position={Position.Right} id="right" className="!bg-transparent !border-0 !w-0 !h-0" />
+      <Handle type="target" position={Position.Right} id="right-target" className="!bg-transparent !border-0 !w-0 !h-0" />
       <Handle type="source" position={Position.Left} id="left" className="!bg-transparent !border-0 !w-0 !h-0" />
+      <Handle type="target" position={Position.Left} id="left-target" className="!bg-transparent !border-0 !w-0 !h-0" />
       <Handle type="source" position={Position.Bottom} id="bottom" className="!bg-transparent !border-0 !w-0 !h-0" />
 
       {/* Node body — this IS the node, handles attach to its edges */}
       <div
         className={`
-          rounded-lg border-2 shadow-sm cursor-pointer
+          rounded-lg ${borderWidth} shadow-sm cursor-pointer
           transition-colors w-[200px] h-[80px] flex flex-col items-center justify-center
           text-center overflow-hidden
           ${bgColor}

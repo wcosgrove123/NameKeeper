@@ -11,6 +11,7 @@ interface TreeContextMenuProps {
   onEdit: (person: Person) => void;
   onDelete: (person: Person) => void;
   onAddSpouse: (person: Person) => void;
+  onAddSibling: (person: Person) => void;
   onAddChild: (person: Person) => void;
   onAddParent: (person: Person) => void;
 }
@@ -23,6 +24,7 @@ export default function TreeContextMenu({
   onEdit,
   onDelete,
   onAddSpouse,
+  onAddSibling,
   onAddChild,
   onAddParent,
 }: TreeContextMenuProps) {
@@ -50,6 +52,7 @@ export default function TreeContextMenu({
   const items = [
     { label: 'Edit Person', icon: 'E', action: () => onEdit(person) },
     { label: 'Add Spouse', icon: '+', action: () => onAddSpouse(person) },
+    { label: 'Add Sibling', icon: '+', action: () => onAddSibling(person) },
     { label: 'Add Child', icon: '+', action: () => onAddChild(person) },
     { label: 'Add Parent', icon: '+', action: () => onAddParent(person) },
     { label: 'Delete Person', icon: 'x', action: () => onDelete(person), danger: true },

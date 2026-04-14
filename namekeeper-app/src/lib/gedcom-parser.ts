@@ -69,11 +69,35 @@ export function parseGedcom(text: string): GedcomData {
   let noteBuffer: string[] = [];
   let nameLevel1 = false;
 
+  let phonBuffer: string[] = [];
+
   function flushPerson() {
     if (currentPerson) {
       if (noteBuffer.length > 0) {
         currentPerson.notes.push(noteBuffer.join('\n'));
         noteBuffer = [];
+      }
+      // Assign buffered phone numbers to home/work/mobile slots in order
+      if (phonBuffer.length > 0) {
+        if (!currentPerson.homeTel) currentPerson.homeTel = phonBuffer[0];
+        if (phonBuffer[1] && !currentPerson.mobile) currentPerson.mobile = phonBuffer[1];
+        if (phonBuffer[2] && !currentPerson.workTel) currentPerson.workTel = phonBuffer[2];
+        phonBuffer = [];
+      }
+      // Family Echo stores "surname at birth" in SURN and "surname now" in _MARNM.
+      // Flip so Person.surname is the current/display name.
+      if (!currentPerson.surnameAtBirth) {
+        currentPerson.surnameAtBirth = currentPerson.surname;
+      }
+      // Only women take married names. Family Echo (and Gramps) sometimes
+      // abuses _MARNM to store "middle + last" on male records — don't let
+      // that leak into `surname`.
+      if (
+        currentPerson.sex === 'F' &&
+        currentPerson.marriedName &&
+        currentPerson.marriedName !== currentPerson.surname
+      ) {
+        currentPerson.surname = currentPerson.marriedName;
       }
       persons.set(currentPerson.id, currentPerson);
       currentPerson = null;
@@ -153,6 +177,9 @@ export function parseGedcom(text: string): GedcomData {
           case 'OCCU':
             currentPerson.occupation = line.value;
             break;
+          case 'TITL':
+            currentPerson.title = line.value;
+            break;
           case 'FAMS':
             currentPerson.familiesAsSpouse.push(line.value);
             break;
@@ -170,10 +197,19 @@ export function parseGedcom(text: string): GedcomData {
               currentPerson.givenName = line.value;
               break;
             case 'SURN':
-              currentPerson.surname = line.value;
+              // SURN in Family Echo = surname at birth (maiden).
+              // Store here; flushPerson() will resolve display surname from _MARNM.
+              currentPerson.surnameAtBirth = line.value;
+              if (!currentPerson.surname) currentPerson.surname = line.value;
               break;
             case 'NICK':
               currentPerson.nickname = line.value;
+              break;
+            case 'NPFX':
+              currentPerson.title = line.value;
+              break;
+            case 'NSFX':
+              currentPerson.suffix = line.value;
               break;
             case '_MARNM':
               currentPerson.marriedName = line.value;
@@ -190,6 +226,22 @@ export function parseGedcom(text: string): GedcomData {
           currentPerson.isLiving = false;
           if (line.tag === 'DATE') currentPerson.deathDate = line.value;
           if (line.tag === 'PLAC') currentPerson.deathPlace = line.value;
+        }
+
+        // Residence block holds contact info in Family Echo exports
+        if (subContext === 'RESI') {
+          if (line.tag === 'ADDR') currentPerson.address = line.value;
+          else if (line.tag === 'PHON') phonBuffer.push(line.value);
+          else if (line.tag === 'EMAIL') currentPerson.email = line.value;
+          else if (line.tag === 'WWW') currentPerson.website = line.value;
+          else if (line.tag === 'CONT' && currentPerson.address) {
+            currentPerson.address += '\n' + line.value;
+          }
+        }
+
+        // Occupation.PLAC = company in Family Echo convention
+        if (subContext === 'OCCU' && line.tag === 'PLAC') {
+          currentPerson.company = line.value;
         }
 
         if (subContext === 'NOTE' && (line.tag === 'CONT' || line.tag === 'CONC')) {
@@ -219,6 +271,10 @@ export function parseGedcom(text: string): GedcomData {
             break;
           case '_CURRENT':
             currentFamily.isCurrent = line.value === 'Y';
+            break;
+          case 'DIV':
+          case '_SEPR':
+            currentFamily.divorced = true;
             break;
         }
       } else if (line.level === 2 && subContext === 'MARR') {

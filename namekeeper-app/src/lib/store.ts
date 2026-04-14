@@ -1,8 +1,10 @@
 import { create } from 'zustand';
-import { Person, Family, GedcomData } from './types';
+import { Person, Family, GedcomData, GodparentRef } from './types';
 import { parseGedcom } from './gedcom-parser';
 import { saveFamilyTree, loadFamilyTree, clearFamilyTree } from './db';
 import { jsonToGedcomData } from './serialization';
+import { migratePass1 } from './migrations/pass1-surname-biography';
+import { migratePass2SuffixCleanup } from './migrations/pass2-suffix-cleanup';
 
 export interface NodePosition {
   x: number;
@@ -38,10 +40,26 @@ interface FamilyTreeActions {
   deleteFamily: (id: string) => void;
 
   // Relationship helpers
-  createMarriage: (person1Id: string, person2Id: string, date?: string, place?: string) => string;
+  createMarriage: (
+    person1Id: string,
+    person2Id: string,
+    date?: string,
+    place?: string,
+    partnerType?: 'current' | 'ex',
+  ) => string;
   addChildToFamily: (familyId: string, childId: string) => void;
   removeChildFromFamily: (familyId: string, childId: string) => void;
   setParentChild: (parentId: string, childId: string) => string;
+  addSibling: (existingPersonId: string, siblingData: Omit<Person, 'id'>) => string;
+  linkSibling: (existingPersonId: string, siblingPersonId: string) => string;
+  addGodparent: (godchildId: string, ref: GodparentRef) => void;
+  removeGodparent: (godchildId: string, index: number) => void;
+  addParents: (
+    childId: string,
+    fatherData: Omit<Person, 'id'> | null,
+    motherData: Omit<Person, 'id'> | null,
+    marriageDate?: string,
+  ) => { fatherId?: string; motherId?: string; familyId: string };
 
   // Undo/Redo
   undo: () => void;
@@ -113,12 +131,16 @@ export const useFamilyTreeStore = create<FamilyTreeStore>((set, get) => {
     // Loading
     loadFromGedcom(content, filename) {
       const data = parseGedcom(content);
+      migratePass1(data);
+      migratePass2SuffixCleanup(data);
       set({ data, filename, isDirty: false, isLoaded: true, undoStack: [], redoStack: [], lastModified: Date.now() });
       get().saveToIndexedDB();
     },
 
     loadFromJson(json, filename) {
       const data = jsonToGedcomData(json);
+      migratePass1(data);
+      migratePass2SuffixCleanup(data);
       set({ data, filename, isDirty: false, isLoaded: true, undoStack: [], redoStack: [], lastModified: Date.now() });
       get().saveToIndexedDB();
     },
@@ -126,6 +148,8 @@ export const useFamilyTreeStore = create<FamilyTreeStore>((set, get) => {
     async loadFromIndexedDB() {
       const result = await loadFamilyTree();
       if (result) {
+        migratePass1(result.data);
+        migratePass2SuffixCleanup(result.data);
         set({ data: result.data, filename: result.filename, lastModified: result.lastModified, isDirty: false, isLoaded: true, undoStack: [], redoStack: [], nodePositions: result.nodePositions || {} });
         return true;
       }
@@ -224,7 +248,7 @@ export const useFamilyTreeStore = create<FamilyTreeStore>((set, get) => {
     },
 
     // Relationship helpers
-    createMarriage(person1Id, person2Id, date, place) {
+    createMarriage(person1Id, person2Id, date, place, partnerType) {
       const { data, addFamily } = get();
       if (!data) return '';
 
@@ -246,6 +270,7 @@ export const useFamilyTreeStore = create<FamilyTreeStore>((set, get) => {
         childIds: [],
         marriageDate: date,
         marriagePlace: place,
+        divorced: partnerType === 'ex' ? true : undefined,
       });
 
       // Update person references
@@ -255,6 +280,107 @@ export const useFamilyTreeStore = create<FamilyTreeStore>((set, get) => {
       if (wife) wife.familiesAsSpouse.push(famId);
 
       return famId;
+    },
+
+    addGodparent(godchildId, ref) {
+      const { data } = get();
+      if (!data) return;
+      const child = data.persons.get(godchildId);
+      if (!child) return;
+      pushUndo();
+      const list = child.godparents ? [...child.godparents] : [];
+      list.push(ref);
+      child.godparents = list;
+      markDirty();
+    },
+
+    removeGodparent(godchildId, index) {
+      const { data } = get();
+      if (!data) return;
+      const child = data.persons.get(godchildId);
+      if (!child?.godparents) return;
+      pushUndo();
+      child.godparents = child.godparents.filter((_, i) => i !== index);
+      if (child.godparents.length === 0) child.godparents = undefined;
+      markDirty();
+    },
+
+    linkSibling(existingPersonId, siblingPersonId) {
+      const { data, addFamily, addChildToFamily } = get();
+      if (!data) return '';
+      const existing = data.persons.get(existingPersonId);
+      const sibling = data.persons.get(siblingPersonId);
+      if (!existing || !sibling) return '';
+
+      let familyId = existing.familyAsChild;
+      if (!familyId) {
+        familyId = addFamily({ childIds: [] });
+        const refreshed = get().data;
+        if (refreshed) {
+          const ex = refreshed.persons.get(existingPersonId);
+          const fam = refreshed.families.get(familyId);
+          if (ex && fam) {
+            ex.familyAsChild = familyId;
+            if (!fam.childIds.includes(existingPersonId)) fam.childIds.push(existingPersonId);
+          }
+        }
+      }
+      addChildToFamily(familyId, siblingPersonId);
+      return familyId;
+    },
+
+    addSibling(existingPersonId, siblingData) {
+      const { data, addPerson, addChildToFamily, addFamily } = get();
+      if (!data) return '';
+      const existing = data.persons.get(existingPersonId);
+      if (!existing) return '';
+
+      // Reuse the existing person's birth family if any, otherwise create a
+      // placeholder family so both siblings share parents.
+      let familyId = existing.familyAsChild;
+      if (!familyId) {
+        familyId = addFamily({ childIds: [] });
+        // Re-fetch after the family was created to mutate consistently
+        const refreshed = get().data?.persons.get(existingPersonId);
+        if (refreshed) {
+          refreshed.familyAsChild = familyId;
+          const fam = get().data?.families.get(familyId);
+          if (fam && !fam.childIds.includes(existingPersonId)) {
+            fam.childIds.push(existingPersonId);
+          }
+        }
+      }
+
+      const newId = addPerson(siblingData);
+      addChildToFamily(familyId, newId);
+      return newId;
+    },
+
+    addParents(childId, fatherData, motherData, marriageDate) {
+      const { data, addPerson, addFamily, addChildToFamily } = get();
+      if (!data) return { familyId: '' };
+      const child = data.persons.get(childId);
+      if (!child) return { familyId: '' };
+
+      const fatherId = fatherData ? addPerson({ ...fatherData, sex: 'M' }) : undefined;
+      const motherId = motherData ? addPerson({ ...motherData, sex: 'F' }) : undefined;
+
+      const familyId = addFamily({
+        husbandId: fatherId,
+        wifeId: motherId,
+        childIds: [],
+        marriageDate,
+      });
+
+      // Link parent → family back-references
+      const refreshed = get().data;
+      if (refreshed) {
+        if (fatherId) refreshed.persons.get(fatherId)?.familiesAsSpouse.push(familyId);
+        if (motherId) refreshed.persons.get(motherId)?.familiesAsSpouse.push(familyId);
+      }
+
+      addChildToFamily(familyId, childId);
+      return { fatherId, motherId, familyId };
     },
 
     addChildToFamily(familyId, childId) {

@@ -27,6 +27,7 @@ import { type Node, type Edge } from '@xyflow/react';
 import { GedcomData } from './types';
 import { parseBirthDate } from './gedcom-parser';
 import { calculateRelationship } from './relationship-calculator';
+import { isExFamily } from './family-status';
 import type { PersonNodeData } from '@/components/PersonNode';
 import type { FamilyNodeData } from '@/components/FamilyNode';
 
@@ -1034,22 +1035,41 @@ export function buildTreeViewV2(data: GedcomData, options: TreeViewOptions): Tre
   const centerInfo = buildFamilyInfo(centerPersonId, data, personIds, familyIds);
   const centerCw = multiCoupleWidth(centerInfo);
 
-  // Collect step-children from spouse's other marriages.
-  // These participate in children spacing as if they were siblings.
+  // Collect step-children from each spouse's OTHER marriages — but only their
+  // two most recent ones (per user rule: only the newest 2 wed contribute step
+  // children). Recency is judged by marriage date when available, falling back
+  // to GEDCOM order (familiesAsSpouse insertion order) for undated marriages.
   const stepChildIds = new Set<string>();
   const stepChildFamilyMap = new Map<string, string>(); // childId -> familyId they belong to
   for (const marriage of centerInfo.marriages) {
     if (!marriage.spouseId) continue;
     const spouse = data.persons.get(marriage.spouseId);
     if (!spouse) continue;
-    for (const sfid of spouse.familiesAsSpouse) {
-      if (sfid === marriage.familyId) continue; // skip the shared marriage
-      const sfam = data.families.get(sfid);
+
+    const otherFamIds = spouse.familiesAsSpouse.filter((fid) => fid !== marriage.familyId);
+    const ranked = otherFamIds
+      .map((fid, idx) => {
+        const fam = data.families.get(fid);
+        const date = parseBirthDate(fam?.marriageDate || '');
+        return { fid, date, idx };
+      })
+      // Sort by date descending; undated marriages tie-break by their original
+      // GEDCOM order descending (later in the list = more recent).
+      .sort((a, b) => {
+        if (a.date && b.date) return b.date.getTime() - a.date.getTime();
+        if (a.date) return -1;
+        if (b.date) return 1;
+        return b.idx - a.idx;
+      })
+      .slice(0, 2);
+
+    for (const { fid } of ranked) {
+      const sfam = data.families.get(fid);
       if (!sfam) continue;
       for (const scid of sfam.childIds) {
         if (personIds.has(scid) && !centerInfo.children.some(c => c.personId === scid)) {
           stepChildIds.add(scid);
-          stepChildFamilyMap.set(scid, sfid);
+          stepChildFamilyMap.set(scid, fid);
         }
       }
     }
@@ -1639,50 +1659,7 @@ export function buildTreeViewV2(data: GedcomData, options: TreeViewOptions): Tre
       data: { familyId: famId, marriageDate: family.marriageDate, hoverLabel } satisfies FamilyNodeData as unknown as Record<string, unknown>,
     });
 
-    // Determine if this is an "ex" marriage (person has multiple marriages
-    // and this isn't the last/current one). Ex-spouse edges get dashed lines.
-    const isExMarriage = (() => {
-      // If GEDCOM has explicit _CURRENT tag, use it
-      const thisFam = data.families.get(famId);
-      if (thisFam && thisFam.isCurrent !== undefined) {
-        return !thisFam.isCurrent;
-      }
-      // Fallback: check if a sibling family has _CURRENT Y (making this one an ex),
-      // or compare marriage dates, or don't mark as ex if we can't determine.
-      for (const spouseId of [husbId, wifeId]) {
-        if (!spouseId) continue;
-        const sp = data.persons.get(spouseId);
-        if (!sp) continue;
-        const spouseFams = sp.familiesAsSpouse.filter(f => {
-          if (!familyIds.has(f)) return false;
-          const fm = data.families.get(f);
-          if (!fm) return false;
-          return (fm.husbandId && fm.wifeId) || fm.childIds.length > 0;
-        });
-        if (spouseFams.length <= 1) continue;
-
-        // If any sibling family is explicitly _CURRENT Y, this one is ex if it's not
-        const siblingHasCurrent = spouseFams.some(f => {
-          const fm = data.families.get(f);
-          return fm?.isCurrent === true;
-        });
-        if (siblingHasCurrent) {
-          return thisFam?.isCurrent !== true;
-        }
-
-        // Use marriage dates: earlier marriage = ex
-        const thisDate = parseBirthDate(thisFam?.marriageDate || '');
-        if (thisDate) {
-          for (const otherFamId of spouseFams) {
-            if (otherFamId === famId) continue;
-            const otherFam = data.families.get(otherFamId);
-            const otherDate = parseBirthDate(otherFam?.marriageDate || '');
-            if (otherDate && thisDate < otherDate) return true;
-          }
-        }
-      }
-      return false;
-    })();
+    const isExMarriage = isExFamily(famId, data);
 
     const dashedStyle = isExMarriage ? { strokeDasharray: '6 3' } : {};
 

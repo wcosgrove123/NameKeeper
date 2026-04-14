@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import AppHeader from '@/components/AppHeader';
 import FullTreeView from '@/components/FullTreeView';
-import PersonDetail, { ConnectedFamily } from '@/components/PersonDetail';
+import PersonSidePanel, { ConnectedFamily } from '@/components/PersonSidePanel';
 import PersonFormDialog from '@/components/PersonFormDialog';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import RelationshipDialog from '@/components/RelationshipDialog';
@@ -20,7 +20,7 @@ import { useAutoLoad } from '@/lib/use-auto-load';
 
 export default function FamilyTreePage() {
   const store = useFamilyTreeStore();
-  const { data, isLoaded, loadFromGedcom, addPerson, updatePerson, deletePerson, createMarriage, setParentChild, undo, redo } = store;
+  const { data, isLoaded, lastModified, loadFromGedcom, addPerson, updatePerson, deletePerson, createMarriage, setParentChild, undo, redo } = store;
 
   // View mode: 'overview' | 'tree'
   const [viewMode, setViewMode] = useState<'overview' | 'tree'>('overview');
@@ -89,7 +89,7 @@ export default function FamilyTreePage() {
 
   // Relationship dialog state
   const [relationshipOpen, setRelationshipOpen] = useState(false);
-  const [relationshipMode, setRelationshipMode] = useState<'marriage' | 'add-child' | 'add-parent'>('marriage');
+  const [relationshipMode, setRelationshipMode] = useState<'marriage' | 'add-child' | 'add-parent' | 'add-sibling' | 'add-godparent'>('marriage');
   const [relationshipAnchor, setRelationshipAnchor] = useState<string | undefined>();
 
   // Context menu state
@@ -99,11 +99,12 @@ export default function FamilyTreePage() {
   // Auto-load from IndexedDB or bundled data
   useAutoLoad();
 
-  // Build person-centered tree
+  // Build person-centered tree. lastModified included so in-place store mutations
+  // (which keep the same `data` reference) still invalidate this memo.
   const treeResult = useMemo(() => {
     if (!data || !centerPersonId) return null;
     return computePersonTree(centerPersonId, data, ancestorDepth, descendantDepth);
-  }, [data, centerPersonId, ancestorDepth, descendantDepth]);
+  }, [data, lastModified, centerPersonId, ancestorDepth, descendantDepth]);
 
   const treeElements = treeResult?.elements || [];
   const treePositions = treeResult?.positions || {};
@@ -202,6 +203,12 @@ export default function FamilyTreePage() {
   const handleAddParent = useCallback((person: Person) => {
     setRelationshipAnchor(person.id);
     setRelationshipMode('add-parent');
+    setRelationshipOpen(true);
+  }, []);
+
+  const handleAddSibling = useCallback((person: Person) => {
+    setRelationshipAnchor(person.id);
+    setRelationshipMode('add-sibling');
     setRelationshipOpen(true);
   }, []);
 
@@ -399,12 +406,30 @@ export default function FamilyTreePage() {
 
         {/* Person detail */}
         {selectedPerson && !contextMenuPerson && !relationshipPersonA && (
-          <div className="absolute top-3 right-14 z-10">
-            <PersonDetail
+          <div className="absolute top-3 right-14 bottom-3 z-10 flex items-start">
+            <PersonSidePanel
               person={data.persons.get(selectedPerson.id) || selectedPerson}
+              data={data}
               connectedFamilies={connectedFamilies}
               onClose={() => setSelectedPerson(null)}
               onEdit={READ_ONLY ? undefined : () => handleEditPerson(selectedPerson)}
+              onAddSpouse={READ_ONLY ? undefined : handleAddSpouse}
+              onAddSibling={READ_ONLY ? undefined : handleAddSibling}
+              onAddChild={READ_ONLY ? undefined : handleAddChild}
+              onAddParent={READ_ONLY ? undefined : handleAddParent}
+              onAddGodparent={READ_ONLY ? undefined : (p) => {
+                setRelationshipAnchor(p.id);
+                setRelationshipMode('add-godparent');
+                setRelationshipOpen(true);
+              }}
+              onRemoveGodparent={READ_ONLY ? undefined : (id, idx) => store.removeGodparent(id, idx)}
+              onSelectPerson={(id) => {
+                const p = data.persons.get(id);
+                if (p) setSelectedPerson(p);
+              }}
+              onDelete={READ_ONLY ? undefined : handleDeleteRequest}
+              onPhotoChange={(id, url) => updatePerson(id, { photoUrl: url })}
+              onSetDivorced={(famId, divorced) => store.updateFamily(famId, { divorced: divorced || undefined })}
             />
           </div>
         )}
@@ -420,6 +445,7 @@ export default function FamilyTreePage() {
           onEdit={handleEditPerson}
           onDelete={handleDeleteRequest}
           onAddSpouse={handleAddSpouse}
+          onAddSibling={handleAddSibling}
           onAddChild={handleAddChild}
           onAddParent={handleAddParent}
         />
@@ -428,7 +454,13 @@ export default function FamilyTreePage() {
       {/* Dialogs */}
       <PersonFormDialog open={personFormOpen} person={editingPerson} onClose={() => { setPersonFormOpen(false); setEditingPerson(null); }} onSave={handleSavePerson} />
       <ConfirmDialog open={confirmOpen} title="Delete Person" message={`Delete ${personToDelete?.givenName} ${personToDelete?.surname}?`} details={deleteDetails} confirmLabel="Delete" confirmVariant="danger" onConfirm={handleConfirmDelete} onCancel={() => { setConfirmOpen(false); setPersonToDelete(null); }} />
-      <RelationshipDialog open={relationshipOpen} mode={relationshipMode} anchorPersonId={relationshipAnchor} data={data} onClose={() => setRelationshipOpen(false)} onCreateMarriage={(p1, p2, d, p) => createMarriage(p1, p2, d, p)} onAddChild={(pid, cid) => setParentChild(pid, cid)} onAddParent={(cid, pid) => setParentChild(pid, cid)} />
+      <RelationshipDialog
+        open={relationshipOpen}
+        mode={relationshipMode}
+        anchorPersonId={relationshipAnchor}
+        data={data}
+        onClose={() => setRelationshipOpen(false)}
+      />
     </div>
   );
 }

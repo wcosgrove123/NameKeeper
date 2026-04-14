@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import GedcomUploader from '@/components/GedcomUploader';
 import FamilyTree from '@/components/FamilyTree';
 import NameKeeperPanel from '@/components/NameKeeperPanel';
-import PersonDetail, { ConnectedFamily } from '@/components/PersonDetail';
+import PersonSidePanel, { ConnectedFamily } from '@/components/PersonSidePanel';
 import MatriarchView from '@/components/MatriarchView';
 import AppHeader from '@/components/AppHeader';
 import { getSurnames } from '@/lib/gedcom-parser';
@@ -18,6 +19,8 @@ import { READ_ONLY } from '@/lib/site-config';
 import { useAutoLoad } from '@/lib/use-auto-load';
 
 export default function Home() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: gedcomData, isLoaded, loadFromGedcom } = useFamilyTreeStore();
 
   const [nameKeeperResults, setNameKeeperResults] = useState<Map<string, NameKeeperResult[]>>(
@@ -43,6 +46,18 @@ export default function Home() {
     const results = computeAllNameKeepers(gedcomData);
     setNameKeeperResults(results);
 
+    // Honor cross-page deep link first: ?surname=Cosgrove&person=@I123@
+    const linkSurname = searchParams.get('surname');
+    const linkPerson = searchParams.get('person');
+    if (linkSurname && results.has(linkSurname)) {
+      setSelectedSurname(linkSurname);
+      if (linkPerson) {
+        const p = gedcomData.persons.get(linkPerson);
+        if (p) setSelectedPerson(p);
+      }
+      return;
+    }
+
     // Auto-select first surname with active Name Keeper
     const firstActive = Array.from(results.entries()).find(([, res]) =>
       res.some((r) => r.currentNameKeeper !== null)
@@ -53,7 +68,7 @@ export default function Home() {
     } else if (surnames.length > 0) {
       setSelectedSurname(surnames[0].surname);
     }
-  }, [gedcomData]);
+  }, [gedcomData, searchParams]);
 
   const handleFileLoaded = useCallback((content: string, name: string) => {
     loadFromGedcom(content, name);
@@ -253,19 +268,24 @@ export default function Home() {
           />
 
           {/* Person detail popup */}
-          {selectedPerson && (
-            <PersonDetail
-              person={selectedPerson}
-              nameKeeperStats={nameKeeperStatsMap.get(selectedPerson.id) ?? null}
-              matriarchStats={matriarchStatsMap.get(selectedPerson.id) ?? null}
-              connectedFamilies={connectedFamilies}
-              whatIfResult={whatIfMode && whatIfResult && whatIfResult.eliminatedPerson.id === selectedPerson.id ? whatIfResult : null}
-              onClose={() => setSelectedPerson(null)}
-              onViewMatriarch={() => {
-                const stats = matriarchStatsMap.get(selectedPerson.id);
-                if (stats) setMatriarchViewStats(stats);
-              }}
-            />
+          {selectedPerson && gedcomData && (
+            <div className="absolute top-3 right-3 z-10">
+              <PersonSidePanel
+                person={gedcomData.persons.get(selectedPerson.id) || selectedPerson}
+                data={gedcomData}
+                nameKeeperStats={nameKeeperStatsMap.get(selectedPerson.id) ?? null}
+                matriarchStats={matriarchStatsMap.get(selectedPerson.id) ?? null}
+                connectedFamilies={connectedFamilies}
+                whatIfResult={whatIfMode && whatIfResult && whatIfResult.eliminatedPerson.id === selectedPerson.id ? whatIfResult : null}
+                onClose={() => setSelectedPerson(null)}
+                onViewMatriarch={() => {
+                  const stats = matriarchStatsMap.get(selectedPerson.id);
+                  if (stats) setMatriarchViewStats(stats);
+                }}
+                onPhotoChange={(id, url) => useFamilyTreeStore.getState().updatePerson(id, { photoUrl: url })}
+                onOpenInTreeView={(id) => router.push(`/tree-view-2?person=${encodeURIComponent(id)}`)}
+              />
+            </div>
           )}
 
           {/* Matriarch View panel */}

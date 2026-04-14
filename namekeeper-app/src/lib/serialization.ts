@@ -41,14 +41,32 @@ export function gedcomDataToGedcom(data: GedcomData): string {
   lines.push('2 FORM LINEAGE-LINKED');
   lines.push('1 CHAR UTF-8');
 
+  // Helper: emit a multi-line string as `1 TAG firstline` + `2 CONT …`
+  function emitMultiline(tag: string, value: string) {
+    const split = value.split('\n');
+    lines.push(`1 ${tag} ${split[0]}`);
+    for (let i = 1; i < split.length; i++) {
+      lines.push(`2 CONT ${split[i]}`);
+    }
+  }
+
   // Individuals
   for (const person of data.persons.values()) {
     lines.push(`0 ${person.id} INDI`);
-    lines.push(`1 NAME ${person.givenName} /${person.surname}/`);
-    if (person.givenName) lines.push(`2 GIVN ${person.givenName}`);
-    if (person.surname) lines.push(`2 SURN ${person.surname}`);
+    // Display NAME uses the surname-at-birth form (matches Family Echo convention)
+    const nameSurname = person.surnameAtBirth || person.surname;
+    const fullGiven = [person.givenName, person.middleNames].filter(Boolean).join(' ').trim();
+    const namePrimary = `${fullGiven} /${nameSurname}/${person.suffix ? ' ' + person.suffix : ''}`.trim();
+    lines.push(`1 NAME ${namePrimary}`);
+    if (person.title) lines.push(`2 NPFX ${person.title}`);
+    if (fullGiven) lines.push(`2 GIVN ${fullGiven}`);
     if (person.nickname) lines.push(`2 NICK ${person.nickname}`);
-    if (person.marriedName) lines.push(`2 _MARNM ${person.marriedName}`);
+    if (nameSurname) lines.push(`2 SURN ${nameSurname}`);
+    if (person.suffix) lines.push(`2 NSFX ${person.suffix}`);
+    // _MARNM holds "surname now" — write current surname when it differs from birth
+    const marnm = person.marriedName || (person.surname !== nameSurname ? person.surname : undefined);
+    if (marnm) lines.push(`2 _MARNM ${marnm}`);
+
     lines.push(`1 SEX ${person.sex}`);
 
     if (person.birthDate || person.birthPlace) {
@@ -67,7 +85,32 @@ export function gedcomDataToGedcom(data: GedcomData): string {
       }
     }
 
-    if (person.occupation) lines.push(`1 OCCU ${person.occupation}`);
+    if (person.occupation || person.company) {
+      lines.push(`1 OCCU ${person.occupation || ''}`);
+      if (person.company) lines.push(`2 PLAC ${person.company}`);
+    }
+
+    // Residence block holds contact info in Family Echo
+    if (person.address || person.email || person.website || person.homeTel || person.mobile || person.workTel) {
+      lines.push('1 RESI');
+      if (person.address) {
+        const addrLines = person.address.split('\n');
+        lines.push(`2 ADDR ${addrLines[0]}`);
+        for (let i = 1; i < addrLines.length; i++) {
+          lines.push(`3 CONT ${addrLines[i]}`);
+        }
+      }
+      if (person.homeTel) lines.push(`2 PHON ${person.homeTel}`);
+      if (person.mobile) lines.push(`2 PHON ${person.mobile}`);
+      if (person.workTel) lines.push(`2 PHON ${person.workTel}`);
+      if (person.email) lines.push(`2 EMAIL ${person.email}`);
+      if (person.website) lines.push(`2 WWW ${person.website}`);
+    }
+
+    // Biography fields ride along as NOTE lines so Family Echo round-trips them
+    if (person.interests) lines.push(`1 NOTE Interests: ${person.interests}`);
+    if (person.activities) lines.push(`1 NOTE Activities: ${person.activities}`);
+    if (person.bioNotes) emitMultiline('NOTE', `Bio notes: ${person.bioNotes}`);
 
     for (const famId of person.familiesAsSpouse) {
       lines.push(`1 FAMS ${famId}`);
@@ -77,11 +120,7 @@ export function gedcomDataToGedcom(data: GedcomData): string {
     }
 
     for (const note of person.notes) {
-      const noteLines = note.split('\n');
-      lines.push(`1 NOTE ${noteLines[0]}`);
-      for (let i = 1; i < noteLines.length; i++) {
-        lines.push(`2 CONT ${noteLines[i]}`);
-      }
+      emitMultiline('NOTE', note);
     }
   }
 
@@ -98,6 +137,8 @@ export function gedcomDataToGedcom(data: GedcomData): string {
       if (family.marriageDate) lines.push(`2 DATE ${family.marriageDate}`);
       if (family.marriagePlace) lines.push(`2 PLAC ${family.marriagePlace}`);
     }
+    if (family.divorced) lines.push('1 DIV Y');
+    if (family.isCurrent !== undefined) lines.push(`1 _CURRENT ${family.isCurrent ? 'Y' : 'N'}`);
   }
 
   lines.push('0 TRLR');

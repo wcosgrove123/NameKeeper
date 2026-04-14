@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { Person, GedcomData } from '@/lib/types';
+import { searchPersons } from '@/lib/person-search';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -265,23 +266,13 @@ function SearchOverlay({
 
   const results = useMemo(() => {
     if (!query.trim()) return [];
-    const q = query.trim().toLowerCase();
-    const matches: { person: Person; score: number }[] = [];
-    for (const person of data.persons.values()) {
-      const full = `${person.givenName} ${person.surname}`.toLowerCase();
-      if (full.includes(q)) {
-        const exact = full.startsWith(q) ? 200 : 100;
-        matches.push({ person, score: exact + q.length / full.length * 50 });
-      }
-    }
-    matches.sort((a, b) => b.score - a.score);
-    return matches.slice(0, 12);
+    return searchPersons(data, query, 12);
   }, [query, data]);
 
   // Group by surname
   const grouped = useMemo(() => {
     const groups = new Map<string, Person[]>();
-    for (const { person } of results) {
+    for (const person of results) {
       const key = person.surname || 'Unknown';
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key)!.push(person);
@@ -304,7 +295,7 @@ function SearchOverlay({
       >
         {[
           { href: '/', label: 'Name Keeper' },
-          { href: '/family-tree', label: 'Family Tree' },
+          { href: '/relationship', label: 'Relationship' },
         ].map(item => (
           <Link
             key={item.href}

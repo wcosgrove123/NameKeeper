@@ -61,8 +61,8 @@ export default function AppHeader() {
 
   const navItems = [
     { href: '/', label: 'Name Keeper' },
-    { href: '/family-tree', label: 'Family Tree' },
     { href: '/tree-view-2', label: 'Tree View' },
+    { href: '/relationship', label: 'Relationship' },
   ];
 
   return (

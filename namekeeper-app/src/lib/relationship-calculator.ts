@@ -1,4 +1,5 @@
 import { Person, GedcomData } from './types';
+import { isExFamily, isIrrelevantExFamily } from './family-status';
 
 interface AncestorPath {
   personId: string;
@@ -8,10 +9,9 @@ interface AncestorPath {
 
 // ── Step/half-sibling detection ──────────────────────────────────────
 
-/** PersonA is a step-parent of personB if A is CURRENTLY married to a bio parent of B
- *  but A is NOT themselves a bio parent of B.
- *  Ex-spouses of a bio parent are NOT step-parents (they were never in the child's life
- *  if the marriage ended before the child was born or if it's a prior marriage). */
+/** PersonA is a step-parent of personB if A is (non-divorced) married to a bio
+ *  parent of B but is NOT themselves a bio parent of B.
+ *  Ex-spouses of a bio parent are not step-parents. */
 function isStepParent(personAId: string, personBId: string, data: GedcomData): boolean {
   const childB = data.persons.get(personBId);
   if (!childB?.familyAsChild) return false;
@@ -19,7 +19,7 @@ function isStepParent(personAId: string, personBId: string, data: GedcomData): b
   if (!birthFam) return false;
   // A IS a bio parent → not a step-parent
   if (birthFam.husbandId === personAId || birthFam.wifeId === personAId) return false;
-  // Check if A is married to a bio parent of B via a CURRENT marriage
+  // A must share a non-ex marriage with one of B's bio parents
   for (const bioParentId of [birthFam.husbandId, birthFam.wifeId]) {
     if (!bioParentId) continue;
     const bioParent = data.persons.get(bioParentId);
@@ -27,15 +27,8 @@ function isStepParent(personAId: string, personBId: string, data: GedcomData): b
     for (const fid of bioParent.familiesAsSpouse) {
       const fam = data.families.get(fid);
       if (!fam) continue;
+      if (isExFamily(fid, data)) continue; // ex-spouse is not a step-parent
       if (fam.husbandId === personAId || fam.wifeId === personAId) {
-        // If _CURRENT tag exists, only count as step-parent if marriage is current
-        if (fam.isCurrent === false) continue; // explicitly not current → skip
-        // If the child's birth family IS current and this marriage is NOT the birth family,
-        // check if this marriage is an ex (predates the birth family)
-        if (birthFam.isCurrent === true && fam.isCurrent === undefined) {
-          // Birth family is explicitly current; this marriage has no tag → likely an ex
-          continue;
-        }
         return true;
       }
     }
@@ -95,19 +88,22 @@ export function calculateRelationship(
     return 'Half-Sibling';
   }
 
-  // Check if they're married (spouse check first, before ancestor walk)
+  // Check if they're married (spouse check first, before ancestor walk).
+  // Distinguish current spouse from ex-spouse so the LCA fallback never
+  // mislabels an ex as "Self (by marriage)" or "Not related".
   const pA = data.persons.get(personAId);
   if (pA) {
     for (const famId of pA.familiesAsSpouse) {
       const fam = data.families.get(famId);
       if (!fam) continue;
-      if ((fam.husbandId === personAId && fam.wifeId === personBId) ||
-          (fam.wifeId === personAId && fam.husbandId === personBId)) {
-        const personA = data.persons.get(personAId);
-        if (personA?.sex === 'M') return 'Husband';
-        if (personA?.sex === 'F') return 'Wife';
-        return 'Spouse';
-      }
+      const isMatch =
+        (fam.husbandId === personAId && fam.wifeId === personBId) ||
+        (fam.wifeId === personAId && fam.husbandId === personBId);
+      if (!isMatch) continue;
+      const ex = isExFamily(famId, data);
+      if (pA.sex === 'M') return ex ? 'Ex-Husband' : 'Husband';
+      if (pA.sex === 'F') return ex ? 'Ex-Wife' : 'Wife';
+      return ex ? 'Ex-Spouse' : 'Spouse';
     }
   }
 
@@ -143,12 +139,14 @@ export function calculateRelationship(
     if (inLawResult) return inLawResult;
 
     // Generic: if A is married to someone related to B, use that relationship + "by marriage"
-    // but re-gender the label to match personA's sex, not the spouse's
+    // but re-gender the label to match personA's sex, not the spouse's.
+    // Skip childless divorces — no lasting kinship.
     const pA2 = data.persons.get(personAId);
     if (pA2) {
       for (const famId of pA2.familiesAsSpouse) {
         const fam = data.families.get(famId);
         if (!fam) continue;
+        if (isIrrelevantExFamily(famId, data)) continue;
         const spouseId = fam.husbandId === personAId ? fam.wifeId : fam.husbandId;
         if (spouseId && spouseId !== personBId) {
           const spouseRel = calculateRelationship(spouseId, personBId, data, _depth + 1);
@@ -197,10 +195,12 @@ function getAllAncestors(
       }
     }
 
-    // Walk through spouse (marks as in-law path)
+    // Walk through spouse (marks as in-law path).
+    // Skip childless ex-marriages — they don't create lasting kinship.
     for (const famId of person.familiesAsSpouse) {
       const fam = data.families.get(famId);
       if (!fam) continue;
+      if (isIrrelevantExFamily(famId, data)) continue;
       const spouseId = fam.husbandId === pid ? fam.wifeId : fam.husbandId;
       if (spouseId && !visited.has(spouseId)) {
         // Don't walk up spouse's parents (that would make everyone related)
@@ -225,14 +225,18 @@ function checkInLawRelationship(
   const personB = data.persons.get(personBId);
   if (!personA || !personB) return null;
 
-  // Check if A is married to B
+  // Check if A is married to B (label exes distinctly)
   for (const famId of personA.familiesAsSpouse) {
     const fam = data.families.get(famId);
     if (!fam) continue;
-    if ((fam.husbandId === personAId && fam.wifeId === personBId) ||
-        (fam.wifeId === personAId && fam.husbandId === personBId)) {
-      return 'Spouse';
-    }
+    const isMatch =
+      (fam.husbandId === personAId && fam.wifeId === personBId) ||
+      (fam.wifeId === personAId && fam.husbandId === personBId);
+    if (!isMatch) continue;
+    const ex = isExFamily(famId, data);
+    if (personA.sex === 'M') return ex ? 'Ex-Husband' : 'Husband';
+    if (personA.sex === 'F') return ex ? 'Ex-Wife' : 'Wife';
+    return ex ? 'Ex-Spouse' : 'Spouse';
   }
 
   // Check if A is married to B's sibling (sister/brother-in-law)
@@ -247,6 +251,7 @@ function checkInLawRelationship(
         for (const famId of sib.familiesAsSpouse) {
           const fam = data.families.get(famId);
           if (!fam) continue;
+          if (isIrrelevantExFamily(famId, data)) continue;
           if ((fam.husbandId === sibId && fam.wifeId === personAId) ||
               (fam.wifeId === sibId && fam.husbandId === personAId)) {
             if (personA.sex === 'M') return 'Brother-in-Law';
@@ -276,6 +281,7 @@ function checkInLawRelationship(
           for (const famId of uncle.familiesAsSpouse) {
             const fam = data.families.get(famId);
             if (!fam) continue;
+            if (isIrrelevantExFamily(famId, data)) continue;
             if ((fam.husbandId === uncleId && fam.wifeId === personAId) ||
                 (fam.wifeId === uncleId && fam.husbandId === personAId)) {
               if (personA.sex === 'M') return 'Uncle (by marriage)';
@@ -299,6 +305,7 @@ function checkInLawRelationship(
         for (const famId of sib.familiesAsSpouse) {
           const fam = data.families.get(famId);
           if (!fam) continue;
+          if (isIrrelevantExFamily(famId, data)) continue;
           if ((fam.husbandId === sibId && fam.wifeId === personBId) ||
               (fam.wifeId === sibId && fam.husbandId === personBId)) {
             if (personA.sex === 'M') return 'Brother-in-Law';
@@ -442,23 +449,25 @@ function getDescendantLabel(generations: number, descendantId: string, data: Ged
 /** Re-gender a relationship label to match a person's sex.
  *  e.g. "Granddaughter" + sex "M" → "Grandson" */
 function regender(rel: string, sex: string): string {
+  // Tuple is [pattern, maleForm, femaleForm] — the male word goes in slot 2
+  // regardless of which form the input string contains.
   const swaps: [RegExp, string, string][] = [
     [/\bGrandfather\b/, 'Grandfather', 'Grandmother'],
-    [/\bGrandmother\b/, 'Grandmother', 'Grandfather'],
+    [/\bGrandmother\b/, 'Grandfather', 'Grandmother'],
     [/\bGrandson\b/, 'Grandson', 'Granddaughter'],
-    [/\bGranddaughter\b/, 'Granddaughter', 'Grandson'],
+    [/\bGranddaughter\b/, 'Grandson', 'Granddaughter'],
     [/\bFather\b/, 'Father', 'Mother'],
-    [/\bMother\b/, 'Mother', 'Father'],
+    [/\bMother\b/, 'Father', 'Mother'],
     [/\bSon\b/, 'Son', 'Daughter'],
-    [/\bDaughter\b/, 'Daughter', 'Son'],
+    [/\bDaughter\b/, 'Son', 'Daughter'],
     [/\bBrother\b/, 'Brother', 'Sister'],
-    [/\bSister\b/, 'Sister', 'Brother'],
+    [/\bSister\b/, 'Brother', 'Sister'],
     [/\bUncle\b/, 'Uncle', 'Aunt'],
-    [/\bAunt\b/, 'Aunt', 'Uncle'],
+    [/\bAunt\b/, 'Uncle', 'Aunt'],
     [/\bNephew\b/, 'Nephew', 'Niece'],
-    [/\bNiece\b/, 'Niece', 'Nephew'],
+    [/\bNiece\b/, 'Nephew', 'Niece'],
     [/\bHusband\b/, 'Husband', 'Wife'],
-    [/\bWife\b/, 'Wife', 'Husband'],
+    [/\bWife\b/, 'Husband', 'Wife'],
   ];
   for (const [pattern, maleForm, femaleForm] of swaps) {
     if (pattern.test(rel)) {
