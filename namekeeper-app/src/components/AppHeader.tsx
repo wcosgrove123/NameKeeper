@@ -6,16 +6,18 @@ import { useRef, useState } from 'react';
 import { useFamilyTreeStore } from '@/lib/store';
 import { gedcomDataToJson, gedcomDataToGedcom, downloadFile } from '@/lib/serialization';
 import { applyResearchUpdates } from '@/lib/migrations/2026-04-11-research-updates';
-import { useAuth } from '@/lib/auth-store';
+import { useAuth, signOut } from '@/lib/auth-store';
+import SignInDialog from './SignInDialog';
 
 export default function AppHeader() {
   const pathname = usePathname();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const READ_ONLY = !isAdmin;
   const store = useFamilyTreeStore();
   const { data, filename, isDirty, loadFromGedcom, loadFromJson, clearData } = store;
   const [migrationResult, setMigrationResult] = useState<string | null>(null);
+  const [signInOpen, setSignInOpen] = useState(false);
 
   const personCount = data?.persons.size ?? 0;
   const familyCount = data?.families.size ?? 0;
@@ -94,6 +96,36 @@ export default function AppHeader() {
       {/* Spacer */}
       <div className="flex-1" />
 
+      {/* Auth chrome — replaces the old bottom-right floating button */}
+      {user ? (
+        <div className="flex items-center gap-1.5 pr-2 mr-1 border-r border-slate-200 h-6">
+          <span
+            className={`w-1.5 h-1.5 rounded-full ${isAdmin ? 'bg-amber-500' : 'bg-slate-300'}`}
+            title={isAdmin ? 'Signed in as admin — edits sync to Firestore' : 'Signed in (viewer only)'}
+          />
+          <span className="text-[11px] text-slate-500 max-w-[160px] truncate">
+            {user.email}
+          </span>
+          <button
+            type="button"
+            onClick={() => signOut()}
+            className="text-[10px] uppercase tracking-wider text-slate-400 hover:text-red-500 transition-colors ml-0.5"
+            title="Sign out"
+          >
+            Sign out
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setSignInOpen(true)}
+          className="px-2.5 py-1 mr-2 text-xs font-medium text-slate-500 hover:text-amber-700 hover:bg-amber-50 border border-slate-200 hover:border-amber-200 rounded-md transition-colors"
+          title="Admin sign in"
+        >
+          Sign in
+        </button>
+      )}
+
       {/* File info */}
       {data && (
         <div className="flex items-center gap-3 text-xs text-slate-400">
@@ -162,6 +194,9 @@ export default function AppHeader() {
         onChange={handleFileSelect}
         className="hidden"
       />
+
+      {/* Sign-in dialog (opened from the header Sign-in button) */}
+      <SignInDialog open={signInOpen} onClose={() => setSignInOpen(false)} />
     </header>
   );
 }
