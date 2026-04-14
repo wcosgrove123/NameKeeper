@@ -35,7 +35,10 @@ jobs:
         run: npm run build
         env:
           NEXT_PUBLIC_SITE_PASSWORD_HASH: ${{ secrets.SITE_PASSWORD_HASH }}
-          NEXT_PUBLIC_READ_ONLY: "true"
+          # Edit mode is safe on the deployed site: every visitor's changes
+          # only affect their own browser's IndexedDB; the canonical
+          # public/data/family.json is never mutated at runtime.
+          NEXT_PUBLIC_READ_ONLY: "false"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
