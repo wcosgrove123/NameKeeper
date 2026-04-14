@@ -24,6 +24,10 @@ export interface PersonNodeData {
   relationshipLabel?: string;
   /** When the currently-selected person has THIS node as a godparent. */
   isGodparentOfSelected?: boolean;
+  /** In the Relationship view, the second of the two queried people
+   *  (the END input). Rendered with a distinct highlight so it is
+   *  visually distinguishable from the START person. */
+  isEndSelection?: boolean;
 }
 
 function PersonNodeComponent({ data }: NodeProps) {
@@ -43,7 +47,9 @@ function PersonNodeComponent({ data }: NodeProps) {
 
   const bgColor = d.isSelected
     ? 'bg-amber-100 border-amber-500'
-    : d.isGodparentOfSelected
+    : d.isEndSelection
+      ? 'bg-violet-100 border-violet-500'
+      : d.isGodparentOfSelected
       ? isMale
         ? 'bg-blue-50 border-blue-600'
         : isFemale
