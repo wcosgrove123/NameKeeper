@@ -6,6 +6,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { Person, GedcomData } from '@/lib/types';
 import { searchPersons } from '@/lib/person-search';
+import SettingsMenu from './SettingsMenu';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -305,6 +306,8 @@ function SearchOverlay({
             {item.label}
           </Link>
         ))}
+        <div className="w-px h-5 bg-slate-200 mx-1" />
+        <SettingsMenu variant="glass" />
       </nav>
 
       {/* Glassmorphic backdrop panel */}
