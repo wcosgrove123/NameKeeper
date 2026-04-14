@@ -15,7 +15,7 @@ import { computeAllMatriarchStats, MatriarchStats } from '@/lib/matriarch-stats'
 import { buildPatrilinealTree, type CytoElement } from '@/lib/tree-layout';
 import { NameKeeperResult, NameKeeperStats, Person, WhatIfResult } from '@/lib/types';
 import { useFamilyTreeStore } from '@/lib/store';
-import { READ_ONLY } from '@/lib/site-config';
+import { useAuth } from '@/lib/auth-store';
 import { useAutoLoad } from '@/lib/use-auto-load';
 
 export default function HomePage() {
@@ -29,6 +29,8 @@ export default function HomePage() {
 function Home() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { isAdmin } = useAuth();
+  const READ_ONLY = !isAdmin;
   const { data: gedcomData, isLoaded, loadFromGedcom } = useFamilyTreeStore();
 
   const [nameKeeperResults, setNameKeeperResults] = useState<Map<string, NameKeeperResult[]>>(

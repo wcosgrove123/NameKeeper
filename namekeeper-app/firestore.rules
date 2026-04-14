@@ -1,0 +1,33 @@
+rules_version = '2';
+
+// Firestore security rules for NameKeeper.
+//
+// Reads are public (every visitor needs to see the shared tree).
+// Writes to the single family_state/current document are locked to the
+// admin user's UID. Everyone else can only read.
+//
+// To deploy:
+//   1. Open https://console.firebase.google.com/project/namekeeper-662ce/firestore/rules
+//   2. Replace the contents of the Rules tab with this file
+//   3. Click Publish
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Shared family state: the whole tree lives in a single document.
+    match /family_state/{docId} {
+      // Anyone (signed-in or not) can read the shared snapshot.
+      allow read: if true;
+
+      // Only the master editor can write. The UID below must match the
+      // ADMIN_UID constant in src/lib/site-config.ts.
+      allow write: if request.auth != null
+                   && request.auth.uid == 'qwws4bq0hafgbGhzFg5TQMbInQD3';
+    }
+
+    // Lock down everything else by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

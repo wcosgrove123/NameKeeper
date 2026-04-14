@@ -5,6 +5,9 @@ import { saveFamilyTree, loadFamilyTree, clearFamilyTree } from './db';
 import { jsonToGedcomData } from './serialization';
 import { migratePass1 } from './migrations/pass1-surname-biography';
 import { migratePass2SuffixCleanup } from './migrations/pass2-suffix-cleanup';
+import { loadRemoteFamilyState, saveRemoteFamilyState } from './firestore-sync';
+import { getFirebaseAuth } from './firebase-client';
+import { ADMIN_UID } from './site-config';
 
 export interface NodePosition {
   x: number;
@@ -27,6 +30,7 @@ interface FamilyTreeActions {
   loadFromGedcom: (content: string, filename: string) => void;
   loadFromJson: (json: string, filename: string) => void;
   loadFromIndexedDB: () => Promise<boolean>;
+  loadFromRemote: () => Promise<boolean>;
   clearData: () => void;
 
   // Person CRUD
@@ -155,6 +159,22 @@ export const useFamilyTreeStore = create<FamilyTreeStore>((set, get) => {
       }
       set({ isLoaded: true });
       return false;
+    },
+
+    async loadFromRemote() {
+      try {
+        const data = await loadRemoteFamilyState();
+        if (!data) return false;
+        migratePass1(data);
+        migratePass2SuffixCleanup(data);
+        set({ data, filename: 'firestore', isDirty: false, isLoaded: true, undoStack: [], redoStack: [], lastModified: Date.now() });
+        // Cache locally so next load is instant even if Firestore is slow.
+        get().saveToIndexedDB();
+        return true;
+      } catch (err) {
+        console.warn('[firestore] remote load failed; falling back to local', err);
+        return false;
+      }
     },
 
     clearData() {
@@ -505,13 +525,27 @@ export const useFamilyTreeStore = create<FamilyTreeStore>((set, get) => {
   };
 });
 
-// Auto-save to IndexedDB on changes (debounced 2s)
+// Auto-save to IndexedDB on changes (debounced 2s). If the current user is
+// signed in as the admin, ALSO push the same snapshot to the shared
+// Firestore document so every viewer sees the change on next load.
 let saveTimeout: ReturnType<typeof setTimeout> | null = null;
 useFamilyTreeStore.subscribe((state) => {
   if (state.isDirty && state.data) {
     if (saveTimeout) clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(() => {
-      state.saveToIndexedDB();
+    saveTimeout = setTimeout(async () => {
+      await state.saveToIndexedDB();
+      // Fire-and-forget the remote push; non-admins will silently fail and
+      // the UI should have prevented the mutation in the first place.
+      try {
+        const auth = getFirebaseAuth();
+        const user = auth.currentUser;
+        if (user && user.uid === ADMIN_UID) {
+          const { data } = useFamilyTreeStore.getState();
+          if (data) await saveRemoteFamilyState(data, user.email || 'admin');
+        }
+      } catch (err) {
+        console.warn('[firestore] remote save failed', err);
+      }
     }, 2000);
   }
 });

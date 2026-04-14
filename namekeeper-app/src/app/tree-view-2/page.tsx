@@ -32,7 +32,7 @@ import { computeAllMatriarchStats } from '@/lib/matriarch-stats';
 import type { ConnectedFamily } from '@/components/PersonSidePanel';
 import { useFamilyTreeStore } from '@/lib/store';
 import { useAutoLoad } from '@/lib/use-auto-load';
-import { READ_ONLY } from '@/lib/site-config';
+import { useAuth } from '@/lib/auth-store';
 import { buildTreeViewV2 } from '@/lib/tree-view-layout-v2';
 import TreeView2Landing from '@/components/TreeView2Landing';
 import type { PersonNodeData } from '@/components/PersonNode';
@@ -47,6 +47,8 @@ const nodeTypes = {
 function TreeViewContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { isAdmin } = useAuth();
+  const READ_ONLY = !isAdmin;
   const store = useFamilyTreeStore();
   const { data, isLoaded, loadFromGedcom, updatePerson, deletePerson, undo, redo, lastModified } = store;
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);

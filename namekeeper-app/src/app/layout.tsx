@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import PasswordGate from "@/components/PasswordGate";
+import AuthButton from "@/components/AuthButton";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -30,6 +31,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <PasswordGate>{children}</PasswordGate>
+        <AuthButton />
       </body>
     </html>
   );

@@ -15,10 +15,12 @@ import { useFamilyTreeStore } from '@/lib/store';
 import { computePersonTree, type PersonTreeElement } from '@/lib/person-tree-layout';
 import { calculateRelationship } from '@/lib/relationship-calculator';
 import { Person } from '@/lib/types';
-import { READ_ONLY } from '@/lib/site-config';
+import { useAuth } from '@/lib/auth-store';
 import { useAutoLoad } from '@/lib/use-auto-load';
 
 export default function FamilyTreePage() {
+  const { isAdmin } = useAuth();
+  const READ_ONLY = !isAdmin;
   const store = useFamilyTreeStore();
   const { data, isLoaded, lastModified, loadFromGedcom, addPerson, updatePerson, deletePerson, createMarriage, setParentChild, undo, redo } = store;
 

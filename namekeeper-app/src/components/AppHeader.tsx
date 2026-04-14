@@ -6,11 +6,13 @@ import { useRef, useState } from 'react';
 import { useFamilyTreeStore } from '@/lib/store';
 import { gedcomDataToJson, gedcomDataToGedcom, downloadFile } from '@/lib/serialization';
 import { applyResearchUpdates } from '@/lib/migrations/2026-04-11-research-updates';
-import { READ_ONLY } from '@/lib/site-config';
+import { useAuth } from '@/lib/auth-store';
 
 export default function AppHeader() {
   const pathname = usePathname();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { isAdmin } = useAuth();
+  const READ_ONLY = !isAdmin;
   const store = useFamilyTreeStore();
   const { data, filename, isDirty, loadFromGedcom, loadFromJson, clearData } = store;
   const [migrationResult, setMigrationResult] = useState<string | null>(null);
