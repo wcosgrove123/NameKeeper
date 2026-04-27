@@ -299,10 +299,13 @@ function SearchOverlay({
 
   return (
     <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-      {/* Top-right navigation */}
+      {/* Top-right navigation. The hardcoded 16/20px offsets were fine on
+          desktop but ate the iPhone notch — pad with safe-area instead. */}
       <nav
-        className="absolute top-4 right-5 pointer-events-auto flex items-center gap-1 px-2 py-1.5 rounded-xl"
+        className="absolute pointer-events-auto flex items-center gap-1 px-2 py-1.5 rounded-xl"
         style={{
+          top: 'calc(env(safe-area-inset-top, 0px) + 1rem)',
+          right: 'calc(env(safe-area-inset-right, 0px) + 1rem)',
           background: 'rgba(255, 255, 255, 0.5)',
           backdropFilter: 'blur(16px) saturate(1.3)',
           WebkitBackdropFilter: 'blur(16px) saturate(1.3)',
@@ -311,15 +314,16 @@ function SearchOverlay({
         }}
       >
         {[
-          { href: '/', label: 'Name Keeper' },
-          { href: '/relationship', label: 'Relationship' },
+          { href: '/', label: 'Name Keeper', shortLabel: 'Names' },
+          { href: '/relationship', label: 'Relationship', shortLabel: 'Relate' },
         ].map(item => (
           <Link
             key={item.href}
             href={item.href}
-            className="px-3 py-1.5 text-xs text-slate-500 hover:text-slate-800 hover:bg-white/50 rounded-lg transition-colors"
+            className="px-2 sm:px-3 py-1.5 text-xs text-slate-500 hover:text-slate-800 hover:bg-white/50 rounded-lg transition-colors"
           >
-            {item.label}
+            <span className="sm:hidden">{item.shortLabel}</span>
+            <span className="hidden sm:inline">{item.label}</span>
           </Link>
         ))}
         <div className="w-px h-5 bg-slate-200 mx-1" />

@@ -243,7 +243,7 @@ export default function FamilyTreePage() {
   // Loading state
   if (!isLoaded) {
     return (
-      <div className="flex flex-col h-screen bg-slate-100">
+      <div className="flex flex-col h-app bg-slate-100">
         <AppHeader />
         <div className="flex-1 flex items-center justify-center">
           <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
@@ -255,7 +255,7 @@ export default function FamilyTreePage() {
   // No data
   if (!data) {
     return (
-      <div className="flex flex-col h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+      <div className="flex flex-col h-app bg-gradient-to-b from-slate-50 to-slate-100">
         <AppHeader />
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="max-w-2xl w-full text-center">
@@ -290,7 +290,7 @@ export default function FamilyTreePage() {
   // Overview mode
   if (viewMode === 'overview' || !centerPersonId) {
     return (
-      <div className="flex flex-col h-screen bg-slate-50">
+      <div className="flex flex-col h-app bg-slate-50">
         <AppHeader />
         <div className="flex-1 overflow-y-auto">
           <FamilyOverview data={data} onSelectPerson={handleSelectFromOverview} />
@@ -315,11 +315,11 @@ export default function FamilyTreePage() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-slate-100">
+    <div className="flex flex-col h-app bg-slate-100">
       <AppHeader />
 
       {/* Toolbar */}
-      <div className="h-10 bg-white border-b border-slate-200 flex items-center px-4 gap-2 shrink-0">
+      <div className="min-h-10 bg-white border-b border-slate-200 flex items-center px-3 sm:px-4 gap-2 shrink-0 overflow-x-auto whitespace-nowrap">
         <button
           onClick={() => { setViewMode('overview'); setCenterPersonId(null); }}
           className="px-3 py-1 text-xs text-slate-500 hover:bg-slate-50 rounded-md transition-colors"
@@ -406,9 +406,10 @@ export default function FamilyTreePage() {
           />
         )}
 
-        {/* Person detail */}
+        {/* Person detail. Mobile: bottom sheet. Desktop: anchored top-right
+            with room for the close button on the right edge. */}
         {selectedPerson && !contextMenuPerson && !relationshipPersonA && (
-          <div className="absolute top-3 right-14 bottom-3 z-10 flex items-start w-80">
+          <div className="absolute z-10 inset-x-2 bottom-2 max-h-[75svh] md:inset-x-auto md:top-3 md:right-14 md:bottom-3 md:w-80 md:max-h-[unset] flex items-start pb-safe md:pb-0">
             <PersonSidePanel
               person={data.persons.get(selectedPerson.id) || selectedPerson}
               data={data}

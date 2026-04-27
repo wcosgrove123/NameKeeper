@@ -50,9 +50,9 @@ export default function RelationshipDialog({ open, mode, anchorPersonId, data, o
     <dialog
       ref={dialogRef}
       onClose={onClose}
-      className="fixed inset-0 z-50 m-auto w-full max-w-md rounded-xl bg-white shadow-2xl border border-slate-200 p-0 backdrop:bg-black/30"
+      className="fixed inset-0 z-50 m-auto w-[calc(100vw-1rem)] max-w-md max-h-[calc(100svh-2rem)] rounded-xl bg-white shadow-2xl border border-slate-200 p-0 backdrop:bg-black/30 overflow-hidden"
     >
-      <div className="px-6 py-4 border-b border-slate-100">
+      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100">
         <h2 className="text-lg font-semibold text-slate-800">{TITLES[normalizedMode]}</h2>
         <p className="text-xs text-slate-400 mt-1">
           for {anchor.givenName} {anchor.surname}
@@ -608,7 +608,7 @@ function AddGodparentWizard({ anchor, data, onDone }: { anchor: Person; data: Ge
 // ── Shared sub-components ─────────────────────────────────────────────
 
 function Body({ children }: { children: React.ReactNode }) {
-  return <div className="px-6 py-4 space-y-4 max-h-[60vh] overflow-y-auto">{children}</div>;
+  return <div className="px-4 sm:px-6 py-4 space-y-4 max-h-[55svh] sm:max-h-[60svh] overflow-y-auto">{children}</div>;
 }
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
@@ -629,7 +629,7 @@ function Footer({
   confirmLabel: string;
 }) {
   return (
-    <div className="px-6 py-4 border-t border-slate-100 flex justify-end gap-2">
+    <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 flex justify-end gap-2 pb-safe-or-3">
       <button
         type="button"
         onClick={onCancel}

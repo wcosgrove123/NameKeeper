@@ -9,7 +9,7 @@ interface MatriarchViewProps {
 
 export default function MatriarchView({ stats, onClose }: MatriarchViewProps) {
   return (
-    <div className="absolute top-0 left-0 bottom-0 w-96 bg-white shadow-2xl border-r border-slate-200 z-30 flex flex-col overflow-hidden animate-slide-in-left">
+    <div className="absolute top-0 left-0 bottom-0 w-full sm:w-96 bg-white shadow-2xl border-r border-slate-200 z-30 flex flex-col overflow-hidden animate-slide-in-left pt-safe pb-safe pl-safe">
       {/* Header */}
       <div className="p-4 border-b border-slate-200 bg-gradient-to-r from-pink-50 to-amber-50 shrink-0">
         <div className="flex items-start justify-between">

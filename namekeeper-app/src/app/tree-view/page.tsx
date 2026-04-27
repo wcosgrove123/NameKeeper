@@ -182,7 +182,7 @@ function TreeViewContent() {
 
   if (!isLoaded) {
     return (
-      <div className="h-dvh flex flex-col">
+      <div className="h-app flex flex-col">
         <AppHeader />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-slate-400">Loading...</div>
@@ -193,7 +193,7 @@ function TreeViewContent() {
 
   if (!data) {
     return (
-      <div className="h-dvh flex flex-col">
+      <div className="h-app flex flex-col">
         <AppHeader />
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="max-w-lg w-full">
@@ -213,7 +213,7 @@ function TreeViewContent() {
       <AppHeader />
 
       {/* Toolbar */}
-      <div className="h-10 bg-white border-b border-slate-200 flex items-center px-4 gap-4 shrink-0">
+      <div className="min-h-10 bg-white border-b border-slate-200 flex items-center px-3 sm:px-4 gap-2 sm:gap-4 shrink-0 overflow-x-auto whitespace-nowrap">
         {/* Search */}
         <div className="relative">
           <button
@@ -223,7 +223,7 @@ function TreeViewContent() {
             Search
           </button>
           {showSearch && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 w-72">
+            <div className="absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 w-[min(20rem,calc(100vw-1.5rem))]">
               <input
                 type="text"
                 value={searchQuery}
@@ -300,9 +300,9 @@ function TreeViewContent() {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex min-h-0">
+      <div className="flex-1 flex min-h-0 relative">
         {/* Tree canvas */}
-        <div className="flex-1 relative" style={{ height: '100%' }}>
+        <div className="flex-1 relative min-w-0" style={{ height: '100%' }}>
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -325,9 +325,9 @@ function TreeViewContent() {
           </ReactFlow>
         </div>
 
-        {/* Detail panel */}
+        {/* Detail panel — docked sidebar at md+, bottom sheet on phones. */}
         {selectedPerson && (
-          <div className="w-72 bg-white border-l border-slate-200 overflow-y-auto p-4">
+          <div className="absolute z-10 inset-x-0 bottom-0 max-h-[70svh] bg-white border-t border-slate-200 md:relative md:inset-auto md:bottom-auto md:max-h-none md:w-72 md:border-t-0 md:border-l overflow-y-auto p-4 pb-safe md:pb-4">
             <div className="flex items-start justify-between mb-3">
               <h3 className="font-semibold text-slate-800 text-sm">
                 {selectedPerson.givenName} {selectedPerson.surname}

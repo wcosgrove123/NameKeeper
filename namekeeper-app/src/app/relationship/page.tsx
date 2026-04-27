@@ -87,9 +87,9 @@ function PersonSearchBox({ label, value, onChange, persons }: PersonSearchBoxPro
   }, [query, persons, editing]);
 
   return (
-    <div className="relative">
+    <div className="relative w-full sm:w-auto">
       <div className="text-[10px] uppercase tracking-wider text-slate-400 mb-1">{label}</div>
-      <div className="flex items-center gap-1 w-72">
+      <div className="flex items-center gap-1 w-full sm:w-72">
         <input
           ref={inputRef}
           type="text"
@@ -117,7 +117,7 @@ function PersonSearchBox({ label, value, onChange, persons }: PersonSearchBoxPro
         )}
       </div>
       {open && results.length > 0 && (
-        <div className="absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 w-72 max-h-72 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 sm:right-auto mt-1 bg-white border border-slate-200 rounded shadow-lg z-50 w-full sm:w-72 max-h-72 overflow-y-auto">
           {results.map(p => (
             <button
               key={p.id}
@@ -199,7 +199,7 @@ function RelationshipContent() {
 
   if (!isLoaded) {
     return (
-      <div className="h-dvh flex flex-col">
+      <div className="h-app flex flex-col">
         <AppHeader />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-slate-400">Loading...</div>
@@ -210,7 +210,7 @@ function RelationshipContent() {
 
   if (!data) {
     return (
-      <div className="h-dvh flex flex-col">
+      <div className="h-app flex flex-col">
         <AppHeader />
         <div className="flex-1 flex items-center justify-center text-slate-500">
           Load a family tree file first.
@@ -223,8 +223,9 @@ function RelationshipContent() {
     <div className="h-dvh flex flex-col">
       <AppHeader />
 
-      {/* Toolbar — person pickers */}
-      <div className="bg-white border-b border-slate-200 px-4 py-2 shrink-0 flex items-end gap-3 flex-wrap">
+      {/* Toolbar — person pickers. On phones we stack the boxes full-width
+          so the swap button doesn't crowd them off-screen. */}
+      <div className="bg-white border-b border-slate-200 px-3 sm:px-4 py-2 shrink-0 flex flex-col sm:flex-row sm:items-end gap-2 sm:gap-3 sm:flex-wrap">
         <PersonSearchBox
           label="Start"
           value={startPerson}
@@ -234,7 +235,7 @@ function RelationshipContent() {
         <button
           onClick={swap}
           disabled={!startPerson || !endPerson}
-          className="mb-1 px-2 py-1.5 text-xs text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded disabled:opacity-30 disabled:hover:bg-transparent"
+          className="self-center sm:self-auto sm:mb-1 px-2 py-1.5 text-xs text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded disabled:opacity-30 disabled:hover:bg-transparent"
           title="Swap start and end"
         >
           ⇄
@@ -246,10 +247,10 @@ function RelationshipContent() {
           persons={personList}
         />
 
-        <div className="flex-1" />
+        <div className="hidden sm:block flex-1" />
 
         {pathResult && startPerson && endPerson && (
-          <div className="mb-1 text-sm">
+          <div className="sm:mb-1 text-xs sm:text-sm">
             <span className="text-slate-500">
               {endPerson.givenName} is{' '}
             </span>
@@ -263,7 +264,7 @@ function RelationshipContent() {
         )}
 
         {startPerson && endPerson && !pathResult && (
-          <div className="mb-1 text-sm text-slate-400">
+          <div className="sm:mb-1 text-xs sm:text-sm text-slate-400">
             No common ancestor found.
           </div>
         )}

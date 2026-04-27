@@ -128,7 +128,7 @@ export default function SettingsMenu({ variant = 'solid' }: SettingsMenuProps = 
         {open && (
           <div
             role="menu"
-            className="absolute top-full right-0 mt-1.5 w-[240px] rounded-xl bg-white/95 backdrop-blur-sm border border-slate-200/80 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-6px_rgba(15,23,42,0.18)] overflow-hidden z-40"
+            className="absolute top-full right-0 mt-1.5 w-[min(240px,calc(100vw-1.5rem))] rounded-xl bg-white/95 backdrop-blur-sm border border-slate-200/80 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-6px_rgba(15,23,42,0.18)] overflow-hidden z-40"
           >
             {/* Account */}
             <Section label="Account">
@@ -202,7 +202,10 @@ export default function SettingsMenu({ variant = 'solid' }: SettingsMenuProps = 
       />
 
       {toast && (
-        <div className="fixed top-14 right-4 bg-violet-50 border border-violet-200 text-violet-800 text-xs px-3 py-2 rounded-lg shadow-md z-50 max-w-xs">
+        <div
+          className="fixed left-3 right-3 sm:left-auto sm:right-4 top-14 sm:max-w-xs bg-violet-50 border border-violet-200 text-violet-800 text-xs px-3 py-2 rounded-lg shadow-md z-50"
+          style={{ top: 'calc(env(safe-area-inset-top, 0px) + 3.5rem)' }}
+        >
           {toast}
         </div>
       )}

@@ -41,6 +41,9 @@ function Home() {
   const [whatIfMode, setWhatIfMode] = useState(false);
   const [whatIfResult, setWhatIfResult] = useState<WhatIfResult | null>(null);
   const [matriarchViewStats, setMatriarchViewStats] = useState<MatriarchStats | null>(null);
+  // Mobile-only: surname list is a slide-in drawer because the desktop's fixed
+  // 288px sidebar would steal more than half the canvas on a phone.
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Auto-load from IndexedDB or bundled data (read-only mode)
   useAutoLoad();
@@ -201,7 +204,7 @@ function Home() {
   // Loading state while checking IndexedDB
   if (!isLoaded) {
     return (
-      <div className="flex flex-col h-screen bg-slate-100">
+      <div className="flex flex-col h-app bg-slate-100">
         <AppHeader />
         <div className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
@@ -216,15 +219,15 @@ function Home() {
   // Upload screen (or loading screen in read-only mode)
   if (!gedcomData) {
     return (
-      <div className="flex flex-col h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+      <div className="flex flex-col h-app bg-gradient-to-b from-slate-50 to-slate-100">
         <AppHeader />
-        <div className="flex-1 flex items-center justify-center p-8">
+        <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
           <div className="max-w-2xl w-full">
-            <div className="text-center mb-8">
-              <h1 className="text-4xl font-bold text-slate-800 mb-3">
+            <div className="text-center mb-6 sm:mb-8">
+              <h1 className="text-2xl sm:text-4xl font-bold text-slate-800 mb-2 sm:mb-3">
                 Name Keeper
               </h1>
-              <p className="text-lg text-slate-500">
+              <p className="text-sm sm:text-lg text-slate-500">
                 {READ_ONLY ? 'Loading family data...' : 'Trace patrilineal surname succession through your family tree'}
               </p>
             </div>
@@ -235,7 +238,7 @@ function Home() {
             ) : (
               <>
                 <GedcomUploader onFileLoaded={handleFileLoaded} />
-                <div className="mt-6 text-center text-sm text-slate-400">
+                <div className="mt-6 text-center text-xs sm:text-sm text-slate-400">
                   Upload a GEDCOM (.ged) file exported from Family Echo, Gramps, webtrees, or any genealogy software.
                   All processing happens locally in your browser.
                 </div>
@@ -249,11 +252,13 @@ function Home() {
 
   // Main app view
   return (
-    <div className="flex flex-col h-screen bg-slate-100">
+    <div className="flex flex-col h-app bg-slate-100">
       <AppHeader />
-      <div className="flex flex-1 min-h-0">
-        {/* Left sidebar - Name Keeper Panel */}
-        <div className="w-72 bg-white border-r border-slate-200 flex flex-col">
+      <div className="flex flex-1 min-h-0 relative">
+        {/* Left sidebar — fixed dock at md+, slide-in drawer on phones.
+            On phones the surnames list would steal half the canvas, so it's
+            hidden behind a floating toggle (the "Surnames" button below). */}
+        <div className="hidden md:flex w-72 bg-white border-r border-slate-200 flex-col">
           <NameKeeperPanel
             results={nameKeeperResults}
             selectedSurname={selectedSurname}
@@ -262,8 +267,42 @@ function Home() {
           />
         </div>
 
+        {/* Mobile drawer — only mounted when open so the close transition
+            doesn't fight any tree-canvas pointer events. */}
+        {mobileSidebarOpen && (
+          <>
+            <button
+              type="button"
+              aria-label="Close surname list"
+              className="md:hidden fixed inset-0 z-30 bg-black/30 animate-fade-slide-in"
+              onClick={() => setMobileSidebarOpen(false)}
+            />
+            <div className="md:hidden fixed inset-y-0 left-0 z-40 w-[min(20rem,85vw)] bg-white border-r border-slate-200 flex flex-col shadow-2xl pt-safe pb-safe pl-safe">
+              <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100 shrink-0">
+                <span className="text-sm font-semibold text-slate-700">Surnames</span>
+                <button
+                  type="button"
+                  onClick={() => setMobileSidebarOpen(false)}
+                  className="touch-target text-slate-400 hover:text-slate-700 -mr-2 px-2"
+                  aria-label="Close"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="flex-1 min-h-0">
+                <NameKeeperPanel
+                  results={nameKeeperResults}
+                  selectedSurname={selectedSurname}
+                  onSelectSurname={(s) => { setSelectedSurname(s); setMobileSidebarOpen(false); }}
+                  selectedResult={selectedResult}
+                />
+              </div>
+            </div>
+          </>
+        )}
+
         {/* Main area - Tree visualization */}
-        <div className="flex-1 relative">
+        <div className="flex-1 relative min-w-0">
           <FamilyTree
             elements={treeElements}
             spousePairs={spousePairs}
@@ -277,10 +316,30 @@ function Home() {
             onToggleWhatIf={toggleWhatIfMode}
           />
 
-          {/* Person detail popup — bounded so it clears the bottom-right
-              zoom toolbar (~52px tall + 12px margin + 12px gap = 76px). */}
+          {/* Mobile-only floating "Surnames" trigger. The desktop sidebar is
+              always visible at md+, so this button is hidden there. */}
+          <button
+            type="button"
+            onClick={() => setMobileSidebarOpen(true)}
+            className="md:hidden absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-white/95 backdrop-blur-sm rounded-lg px-2.5 py-1.5 shadow-md border border-slate-200 text-xs font-medium text-slate-700 active:bg-slate-50"
+            aria-label="Open surname list"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+            <span className="truncate max-w-[8rem]">
+              {selectedSurname ?? 'Surnames'}
+            </span>
+          </button>
+
+          {/* Person detail popup — desktop: anchored top-right above the zoom
+              toolbar. Mobile: bottom sheet that fills the lower 70% of the
+              screen, with the safe-area-inset on its bottom padding so the
+              home-indicator on notched iPhones doesn't cover the buttons. */}
           {selectedPerson && gedcomData && (
-            <div className="absolute top-3 right-3 bottom-[76px] z-10 w-[360px]">
+            <div className="absolute z-10 inset-x-2 bottom-2 max-h-[75svh] md:inset-x-auto md:top-3 md:right-3 md:bottom-[76px] md:w-[360px] md:max-h-[unset] pb-safe md:pb-0">
               <PersonSidePanel
                 person={gedcomData.persons.get(selectedPerson.id) || selectedPerson}
                 data={gedcomData}
@@ -307,13 +366,15 @@ function Home() {
             />
           )}
 
-          {/* Top bar showing current Name Keeper */}
+          {/* Top bar showing current Name Keeper. On phones it's anchored to
+              the right of the floating "Surnames" button so they don't
+              collide; on desktop it stays centered. */}
           {selectedResult?.currentNameKeeper && (
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm rounded-lg px-4 py-2 shadow-md border border-amber-200 animate-fade-slide-in">
-              <div className="text-xs text-slate-500 text-center">
+            <div className="absolute top-3 right-3 md:left-1/2 md:right-auto md:-translate-x-1/2 max-w-[calc(100vw-9rem)] md:max-w-none bg-white/90 backdrop-blur-sm rounded-lg px-2.5 sm:px-4 py-1.5 sm:py-2 shadow-md border border-amber-200 animate-fade-slide-in z-10">
+              <div className="text-[10px] sm:text-xs text-slate-500 text-center truncate">
                 Current {selectedResult.surname} Name Keeper
               </div>
-              <div className="text-sm font-bold text-amber-800 text-center">
+              <div className="text-xs sm:text-sm font-bold text-amber-800 text-center truncate">
                 {selectedResult.currentNameKeeper.givenName}{' '}
                 {selectedResult.currentNameKeeper.surname}
               </div>
@@ -321,11 +382,11 @@ function Home() {
           )}
 
           {selectedResult && !selectedResult.currentNameKeeper && (
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm rounded-lg px-4 py-2 shadow-md border border-slate-200 animate-fade-slide-in">
-              <div className="text-xs text-slate-500 text-center">
+            <div className="absolute top-3 right-3 md:left-1/2 md:right-auto md:-translate-x-1/2 max-w-[calc(100vw-9rem)] md:max-w-none bg-white/90 backdrop-blur-sm rounded-lg px-2.5 sm:px-4 py-1.5 sm:py-2 shadow-md border border-slate-200 animate-fade-slide-in z-10">
+              <div className="text-[10px] sm:text-xs text-slate-500 text-center truncate">
                 {selectedResult.surname} Line
               </div>
-              <div className="text-sm font-semibold text-slate-400 text-center">
+              <div className="text-xs sm:text-sm font-semibold text-slate-400 text-center truncate">
                 Extinct - No Living Male Heirs
               </div>
             </div>

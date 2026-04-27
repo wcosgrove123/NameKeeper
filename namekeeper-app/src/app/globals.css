@@ -3,6 +3,14 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Safe-area insets: 0 fallback when env() isn't available (desktop browsers,
+   * older iOS without viewport-fit=cover). On notched iPhones these resolve to
+   * the actual top/bottom/left/right padding the OS reserves for hardware. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
 }
 
 @theme inline {
@@ -10,6 +18,15 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Expose safe-area insets as Tailwind spacing tokens so utilities like
+   * `pt-safe`, `pb-safe`, `pl-safe`, `pr-safe`, `top-safe`, `bottom-safe`
+   * resolve to the env() value. */
+  --spacing-safe: env(safe-area-inset-top, 0px);
+  --spacing-safe-top: env(safe-area-inset-top, 0px);
+  --spacing-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --spacing-safe-left: env(safe-area-inset-left, 0px);
+  --spacing-safe-right: env(safe-area-inset-right, 0px);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,6 +40,12 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  /* iOS Safari rotates → text auto-scales unless we pin it. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Stop the whole page from rubber-banding when a panel scrolls. The tree
+   * canvas pages own the viewport — they should never bounce-scroll. */
+  overscroll-behavior-y: none;
 }
 
 /* Tailwind v4 preflight resets button cursors to default — restore the pointer
@@ -32,4 +55,98 @@ button:not(:disabled),
 summary,
 label[for] {
   cursor: pointer;
+}
+
+/* ───────────────────────────────────────────────────────────────────────
+ * Mobile-friendly viewport height utilities.
+ *
+ * `h-screen` (100vh) is broken on iOS Safari: it includes the URL bar's
+ * collapsed height, so any layout sized to it gets clipped while the bar is
+ * visible. Modern dynamic units fix this:
+ *   - 100svh — smallest viewport (URL bar visible). Stable, never jumps.
+ *   - 100lvh — largest viewport. Always full bleed.
+ *   - 100dvh — dynamic, follows the URL bar. Smooth but can jitter.
+ *
+ * We use 100svh as the default with 100vh as a fallback for older browsers
+ * (pre-2022 Safari, ancient Chrome). A class so existing `h-screen` callers
+ * can opt-in by swapping to `.h-app`.
+ * ───────────────────────────────────────────────────────────────────────── */
+.h-app {
+  height: 100vh;
+  height: 100svh;
+}
+
+.min-h-app {
+  min-height: 100vh;
+  min-height: 100svh;
+}
+
+/* Dynamic variant — for full-bleed canvases (the tree pages) where we want
+ * the canvas to grow when the URL bar collapses. */
+.h-app-dynamic {
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* Safe-area helper classes. Tailwind v4 spacing tokens above already give us
+ * `pt-safe-top` / `pb-safe-bottom` / etc., but these one-liners are readable
+ * sugar for the most common combinations. */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.pl-safe {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+.pr-safe {
+  padding-right: env(safe-area-inset-right, 0px);
+}
+.px-safe {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+/* Combine a base value with the safe-area inset using max() — so on devices
+ * with no notch we keep the comfortable base, and on notched devices we add
+ * the OS-reserved space on top. */
+.pb-safe-or-3 {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+}
+.pt-safe-or-0 {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Prevent iOS Safari from auto-zooming when an input < 16px is focused.
+ * The auto-zoom is jarring and never undoes itself. We want font-size 16px
+ * minimum on form inputs while keeping our compact UI elsewhere. */
+@media (max-width: 767px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="number"],
+  input[type="date"],
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
+/* Touch targets — Apple HIG recommends 44x44pt minimum. We don't enforce
+ * globally (would break compact desktop UI), but expose a class buttons can
+ * opt into for primary mobile actions. */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* React Flow / Cytoscape canvases sit inside flex children. On mobile the
+ * default touch-action gets in the way of their pinch/pan gestures — let
+ * the libraries own touch behavior on their own containers. */
+.canvas-host {
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
 }

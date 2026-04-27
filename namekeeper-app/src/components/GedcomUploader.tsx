@@ -48,7 +48,7 @@ export default function GedcomUploader({ onFileLoaded }: GedcomUploaderProps) {
   return (
     <div
       className={`
-        flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-xl
+        flex flex-col items-center justify-center p-6 sm:p-12 border-2 border-dashed rounded-xl
         transition-colors cursor-pointer
         ${isDragging ? 'border-amber-500 bg-amber-50' : 'border-slate-300 bg-white hover:border-slate-400'}
       `}

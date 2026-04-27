@@ -488,7 +488,7 @@ function TreeViewContent() {
 
   if (!isLoaded) {
     return (
-      <div className="h-dvh flex flex-col">
+      <div className="h-app flex flex-col">
         <AppHeader />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-slate-400">Loading...</div>
@@ -499,7 +499,7 @@ function TreeViewContent() {
 
   if (!data) {
     return (
-      <div className="h-dvh flex flex-col">
+      <div className="h-app flex flex-col">
         <AppHeader />
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="max-w-lg w-full">
@@ -524,9 +524,9 @@ function TreeViewContent() {
       )}
 
       {/* Toolbar */}
-      <div className="h-10 bg-white border-b border-slate-200 flex items-center px-4 gap-4 shrink-0">
+      <div className="min-h-10 bg-white border-b border-slate-200 flex items-center px-3 sm:px-4 gap-2 sm:gap-4 shrink-0 overflow-x-auto whitespace-nowrap">
         {/* Search */}
-        <div className="relative">
+        <div className="relative shrink-0">
           <button
             onClick={() => setShowSearch(!showSearch)}
             className="px-2 py-1 text-xs text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded"
@@ -534,7 +534,7 @@ function TreeViewContent() {
             Search
           </button>
           {showSearch && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 w-72">
+            <div className="absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 w-[min(20rem,calc(100vw-1.5rem))]">
               <input
                 ref={searchInputRef}
                 type="text"
@@ -590,12 +590,13 @@ function TreeViewContent() {
           )}
         </div>
 
-        <div className="h-4 border-l border-slate-200" />
+        <div className="h-4 border-l border-slate-200 shrink-0" />
 
-        {/* Center person indicator */}
+        {/* Center person indicator — truncate on phones; hide hint text */}
         {centerPersonId && data.persons.get(centerPersonId) && (
-          <div className="text-xs text-slate-500">
-            Centered on: <span className="font-medium text-slate-700">
+          <div className="text-xs text-slate-500 truncate min-w-0">
+            <span className="hidden sm:inline">Centered on: </span>
+            <span className="font-medium text-slate-700">
               {data.persons.get(centerPersonId)!.givenName} {data.persons.get(centerPersonId)!.surname}
             </span>
           </div>
@@ -603,7 +604,8 @@ function TreeViewContent() {
 
         <div className="flex-1" />
 
-        <div className="text-xs text-slate-400">
+        {/* Hint text only fits on tablet+; phones don't have the room */}
+        <div className="text-xs text-slate-400 hidden lg:block shrink-0">
           Double-click to recenter. Click bubbles to expand. Purple + on spouses to show their family.
         </div>
       </div>
@@ -664,9 +666,11 @@ function TreeViewContent() {
           />
         </div>
 
-        {/* Detail panel — floats over the tree, no docked sidebar background */}
+        {/* Detail panel — floats over the tree, no docked sidebar background.
+            Mobile: bottom sheet that fills lower 70% (above the zoom toolbar
+            which sits at `bottom-3`). Desktop: anchored top-right as before. */}
         {selectedPerson && data && (
-          <div className="absolute top-3 right-3 bottom-16 z-10 flex items-start w-80">
+          <div className="absolute z-10 inset-x-2 bottom-2 max-h-[70svh] md:inset-x-auto md:top-3 md:right-3 md:bottom-16 md:w-80 md:max-h-[unset] flex items-start pb-safe md:pb-0">
             <PersonSidePanel
               person={data.persons.get(selectedPerson.id) || selectedPerson}
               data={data}
@@ -770,7 +774,7 @@ function ZoomToolbar({
   const pct = Math.round(zoom * 100);
 
   return (
-    <div className="absolute bottom-3 right-3 z-10 w-80 flex flex-row items-center justify-between bg-white/95 backdrop-blur-sm rounded-xl border border-slate-200/80 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_4px_12px_-2px_rgba(15,23,42,0.08)] px-1.5">
+    <div className="absolute bottom-3 right-3 z-10 w-fit max-w-[calc(100vw-1.5rem)] flex flex-row items-center bg-white/95 backdrop-blur-sm rounded-xl border border-slate-200/80 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_4px_12px_-2px_rgba(15,23,42,0.08)] px-1.5" style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}>
       <ToolBtn label="Zoom out" onClick={() => zoomOut({ duration: 200 })}>
         <MinusIcon />
       </ToolBtn>
@@ -823,7 +827,10 @@ function Legend({
   const [open, setOpen] = useState(true);
 
   return (
-    <div className="absolute bottom-3 left-3 z-10 w-[200px] rounded-xl bg-white/95 backdrop-blur-sm border border-slate-200/80 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_4px_12px_-2px_rgba(15,23,42,0.08)] overflow-hidden">
+    <div
+      className="absolute bottom-3 left-3 z-10 w-[180px] sm:w-[200px] rounded-xl bg-white/95 backdrop-blur-sm border border-slate-200/80 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_4px_12px_-2px_rgba(15,23,42,0.08)] overflow-hidden hidden sm:block"
+      style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
+    >
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}

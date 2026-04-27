@@ -158,6 +158,15 @@ export default function PersonSidePanel({
           transform: visible ? 'translateY(0) scale(1)' : 'translateY(-8px) scale(0.97)',
         }}
       >
+        {/* Drag-handle pill — visible on phones (where this card is a bottom
+            sheet), hidden on tablet+. Purely visual; doesn't drive a gesture. */}
+        <div
+          className="md:hidden shrink-0 flex justify-center pt-1.5 pb-0.5 cursor-pointer"
+          onClick={handleClose}
+          aria-hidden="true"
+        >
+          <div className="h-1 w-9 rounded-full bg-slate-300" />
+        </div>
         {/* Header with sex-tinted gradient strip */}
         <div
           className={`shrink-0 relative bg-gradient-to-b ${sexTint} ${collapsed ? '' : 'to-white border-b border-slate-100'} px-4 pt-4 pb-3`}
@@ -305,7 +314,7 @@ export default function PersonSidePanel({
 
         {/* Action footer */}
         {(onEdit || onAddSpouse || onAddSibling || onAddChild || onAddParent || onAddParents || onCenterPerson || onDelete) && (
-          <div className="shrink-0 px-4 py-3 bg-slate-50/70 border-t border-slate-100 flex items-center gap-1.5">
+          <div className="shrink-0 px-4 py-3 bg-slate-50/70 border-t border-slate-100 flex items-center gap-1.5 flex-wrap">
             {onEdit && <ActionButton label="Edit" onClick={onEdit} primary />}
             {onCenterPerson && <ActionButton label="Center" onClick={() => onCenterPerson(person)} />}
             {(onAddSpouse || onAddSibling || onAddChild || onAddParent || onAddParents || onAddGodparent) && (

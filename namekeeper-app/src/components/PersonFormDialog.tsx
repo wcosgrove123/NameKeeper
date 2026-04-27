@@ -148,11 +148,11 @@ export default function PersonFormDialog({ person, open, onClose, onSave }: Pers
     <dialog
       ref={dialogRef}
       onClose={onClose}
-      className="fixed inset-0 z-50 m-auto w-full max-w-lg rounded-xl bg-white shadow-2xl border border-slate-200 p-0 backdrop:bg-black/30"
+      className="fixed inset-0 z-50 m-auto w-[calc(100vw-1rem)] max-w-lg max-h-[calc(100svh-2rem)] rounded-xl bg-white shadow-2xl border border-slate-200 p-0 backdrop:bg-black/30 overflow-hidden"
     >
       <form onSubmit={handleSubmit}>
-        <div className="px-6 py-4 border-b border-slate-100">
-          <h2 className="text-lg font-semibold text-slate-800">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100">
+          <h2 className="text-base sm:text-lg font-semibold text-slate-800">
             {person ? 'Edit Person' : 'Add Person'}
           </h2>
         </div>
@@ -173,7 +173,7 @@ export default function PersonFormDialog({ person, open, onClose, onSave }: Pers
           />
         </div>
 
-        <div className="px-6 py-4 space-y-3 max-h-[60vh] overflow-y-auto">
+        <div className="px-4 sm:px-6 py-4 space-y-3 max-h-[55svh] sm:max-h-[60svh] overflow-y-auto">
           {tab === 'personal' && (
             <>
               <div className="grid grid-cols-[70px_1fr] gap-3">
@@ -282,7 +282,7 @@ export default function PersonFormDialog({ person, open, onClose, onSave }: Pers
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-slate-100 flex justify-end gap-2">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 flex justify-end gap-2 pb-safe-or-3">
           <button
             type="button"
             onClick={onClose}

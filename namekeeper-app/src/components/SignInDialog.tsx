@@ -51,17 +51,17 @@ export default function SignInDialog({ open, onClose }: SignInDialogProps) {
     <dialog
       ref={dialogRef}
       onClose={onClose}
-      className="fixed inset-0 z-50 m-auto w-full max-w-xs rounded-xl bg-white shadow-2xl border border-slate-200 p-0 backdrop:bg-black/40"
+      className="fixed inset-0 z-50 m-auto w-[calc(100vw-1rem)] max-w-sm rounded-xl bg-white shadow-2xl border border-slate-200 p-0 backdrop:bg-black/40"
     >
       <form onSubmit={handleSubmit}>
-        <div className="px-6 py-4 border-b border-slate-100">
-          <h2 className="text-lg font-semibold text-slate-800">Admin sign in</h2>
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100">
+          <h2 className="text-base sm:text-lg font-semibold text-slate-800">Admin sign in</h2>
           <p className="text-xs text-slate-400 mt-1">
             Only the master editor can push changes to the shared tree.
           </p>
         </div>
 
-        <div className="px-6 py-4 space-y-3">
+        <div className="px-4 sm:px-6 py-4 space-y-3">
           <label className="block">
             <span className="text-xs font-medium text-slate-500">Email</span>
             <input
@@ -90,7 +90,7 @@ export default function SignInDialog({ open, onClose }: SignInDialogProps) {
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-slate-100 flex justify-end gap-2">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 flex justify-end gap-2 pb-safe-or-3">
           <button
             type="button"
             onClick={onClose}
