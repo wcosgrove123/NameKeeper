@@ -523,8 +523,9 @@ function TreeViewContent() {
         <TreeView2Landing data={data} onSelectPerson={handleLandingSelect} />
       )}
 
-      {/* Toolbar */}
-      <div className="min-h-10 bg-white border-b border-slate-200 flex items-center px-3 sm:px-4 gap-2 sm:gap-4 shrink-0 overflow-x-auto whitespace-nowrap">
+      {/* Toolbar — no overflow clipping; the search dropdown drops below
+          this container, and any axis overflow here would clip it. */}
+      <div className="min-h-10 bg-white border-b border-slate-200 flex items-center px-3 sm:px-4 gap-2 sm:gap-4 shrink-0 whitespace-nowrap">
         {/* Search */}
         <div className="relative shrink-0">
           <button

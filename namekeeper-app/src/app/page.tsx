@@ -8,7 +8,6 @@ import NameKeeperPanel from '@/components/NameKeeperPanel';
 import PersonSidePanel, { ConnectedFamily } from '@/components/PersonSidePanel';
 import MatriarchView from '@/components/MatriarchView';
 import AppHeader from '@/components/AppHeader';
-import { getSurnames } from '@/lib/gedcom-parser';
 import { computeAllNameKeepers, getSuccessionIds } from '@/lib/namekeeper';
 import { computeNameKeeperStats, computeWhatIfSuccession } from '@/lib/namekeeper-stats';
 import { computeAllMatriarchStats, MatriarchStats } from '@/lib/matriarch-stats';
@@ -59,7 +58,8 @@ function Home() {
     const results = computeAllNameKeepers(gedcomData);
     setNameKeeperResults(results);
 
-    // Honor cross-page deep link first: ?surname=Cosgrove&person=@I123@
+    // Honor cross-page deep link: ?surname=Cosgrove&person=@I123@
+    // (When present, also drives the in-tree selection for that person.)
     const linkSurname = searchParams.get('surname');
     const linkPerson = searchParams.get('person');
     if (linkSurname && results.has(linkSurname)) {
@@ -71,16 +71,9 @@ function Home() {
       return;
     }
 
-    // Auto-select first surname with active Name Keeper
-    const firstActive = Array.from(results.entries()).find(([, res]) =>
-      res.some((r) => r.currentNameKeeper !== null)
-    );
-    const surnames = getSurnames(gedcomData);
-    if (firstActive) {
-      setSelectedSurname(firstActive[0]);
-    } else if (surnames.length > 0) {
-      setSelectedSurname(surnames[0].surname);
-    }
+    // No deep link → leave the surname unselected so the user picks one from
+    // the sidebar (desktop) or the "Surnames" drawer (mobile). The empty
+    // canvas shows a "Select a surname to view its patrilineal tree" hint.
   }, [gedcomData, searchParams]);
 
   const handleFileLoaded = useCallback((content: string, name: string) => {

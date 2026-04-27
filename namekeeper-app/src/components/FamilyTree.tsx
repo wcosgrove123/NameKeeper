@@ -823,8 +823,10 @@ export default function FamilyTree({ elements, spousePairs, junctionIds, patriar
 
       {/* Empty state */}
       {elements.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center text-slate-400">
-          Select a surname to view its patrilineal tree
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 text-center px-6 gap-1">
+          <span className="hidden md:inline">Select a surname to view its patrilineal tree</span>
+          <span className="md:hidden">Tap “Surnames” above to pick a family</span>
+          <span className="md:hidden text-xs text-slate-300">to view its patrilineal tree</span>
         </div>
       )}
 
@@ -893,11 +895,13 @@ export default function FamilyTree({ elements, spousePairs, junctionIds, patriar
         </div>
       )}
 
-      {/* Skip animation button — only shown while the cascade is running */}
+      {/* Skip animation button — only shown while the cascade is running.
+          Sits *below* the Current Name Keeper bubble (which is at top-3 of
+          the parent), so the two pills don't overlap. */}
       {isAnimating && (
         <button
           onClick={handleSkipAnimation}
-          className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 bg-white/95 backdrop-blur-sm hover:bg-slate-50 active:bg-slate-100 shadow-lg border border-slate-200 rounded-full pl-3 pr-3.5 py-1.5 text-xs font-medium text-slate-700 cursor-pointer transition-colors"
+          className="absolute top-16 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 bg-white/95 backdrop-blur-sm hover:bg-slate-50 active:bg-slate-100 shadow-lg border border-slate-200 rounded-full pl-3 pr-3.5 py-1.5 text-xs font-medium text-slate-700 cursor-pointer transition-colors"
           aria-label="Skip animation"
           title="Skip reveal animation"
         >
@@ -1038,56 +1042,89 @@ export default function FamilyTree({ elements, spousePairs, junctionIds, patriar
         </div>
       )}
 
-      {/* Legend */}
+      {/* Legend — collapsible. On narrow canvases (small desktop windows,
+          tablets) the expanded legend would otherwise overlap the wide
+          bottom-right zoom/control toolbar. Default open on tablet+, closed
+          on phones. */}
       {elements.length > 0 && isLayoutReady && (
-        <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm rounded-lg p-3 text-xs shadow-md border border-slate-200">
-          <div className="font-semibold mb-2 text-slate-700">Legend</div>
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-amber-100 border-2 border-red-600" />
-              <span className="text-slate-600">Current Name Keeper</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-amber-100 border-2 border-amber-500" />
-              <span className="text-slate-600">Succession Path</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-amber-800/20 border-2 border-amber-800" />
-              <span className="text-slate-600">Patriarch</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-blue-100 border-2 border-blue-400" />
-              <span className="text-slate-600">Male</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="flex gap-0.5">
-                <div className="w-2 h-4 rounded-sm bg-blue-100" />
-                <div className="w-2 h-4 rounded-sm bg-blue-200" />
-                <div className="w-2 h-4 rounded-sm bg-blue-300" />
-                <div className="w-2 h-4 rounded-sm bg-blue-400" />
-                <div className="w-2 h-4 rounded-sm bg-blue-500" />
-              </div>
-              <span className="text-slate-600">Gen Depth (1-5+)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-pink-100 border-2 border-pink-400" />
-              <span className="text-slate-600">Female</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-blue-100 border-2 border-dashed border-blue-300" />
-              <span className="text-slate-600">Deceased</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 border-t-2 border-dashed border-slate-400" />
-              <span className="text-slate-600">Extinct Branch</span>
-            </div>
-            {whatIfMode && (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-purple-200 border-2 border-purple-500" />
-                <span className="text-purple-600">What-If Path</span>
-              </div>
-            )}
+        <FamilyTreeLegend whatIfMode={whatIfMode} />
+      )}
+    </div>
+  );
+}
+
+// ── Legend ────────────────────────────────────────────────────────────
+
+function FamilyTreeLegend({ whatIfMode }: { whatIfMode?: boolean }) {
+  // Collapsed by default on phones to avoid colliding with the bottom-right
+  // control bar; opened on tablet+ where there's room.
+  const [open, setOpen] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth >= 768 : true,
+  );
+
+  return (
+    <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm rounded-lg text-xs shadow-md border border-slate-200 max-w-[calc(100vw-1.5rem)]">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between gap-2 px-3 py-2 font-semibold text-slate-700 hover:bg-slate-50 rounded-lg transition-colors"
+        aria-expanded={open}
+      >
+        <span>Legend</span>
+        <svg
+          width="10" height="10" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+          className={`transition-transform ${open ? '' : '-rotate-90'}`}
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+      {open && (
+        <div className="flex flex-col gap-1.5 px-3 pb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-amber-100 border-2 border-red-600" />
+            <span className="text-slate-600">Current Name Keeper</span>
           </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-amber-100 border-2 border-amber-500" />
+            <span className="text-slate-600">Succession Path</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-amber-800/20 border-2 border-amber-800" />
+            <span className="text-slate-600">Patriarch</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-blue-100 border-2 border-blue-400" />
+            <span className="text-slate-600">Male</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex gap-0.5">
+              <div className="w-2 h-4 rounded-sm bg-blue-100" />
+              <div className="w-2 h-4 rounded-sm bg-blue-200" />
+              <div className="w-2 h-4 rounded-sm bg-blue-300" />
+              <div className="w-2 h-4 rounded-sm bg-blue-400" />
+              <div className="w-2 h-4 rounded-sm bg-blue-500" />
+            </div>
+            <span className="text-slate-600">Gen Depth (1-5+)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-full bg-pink-100 border-2 border-pink-400" />
+            <span className="text-slate-600">Female</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-blue-100 border-2 border-dashed border-blue-300" />
+            <span className="text-slate-600">Deceased</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 border-t-2 border-dashed border-slate-400" />
+            <span className="text-slate-600">Extinct Branch</span>
+          </div>
+          {whatIfMode && (
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-purple-200 border-2 border-purple-500" />
+              <span className="text-purple-600">What-If Path</span>
+            </div>
+          )}
         </div>
       )}
     </div>

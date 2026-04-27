@@ -158,25 +158,41 @@ export default function PersonSidePanel({
           transform: visible ? 'translateY(0) scale(1)' : 'translateY(-8px) scale(0.97)',
         }}
       >
-        {/* Drag-handle pill — visible on phones (where this card is a bottom
-            sheet), hidden on tablet+. Purely visual; doesn't drive a gesture. */}
-        <div
-          className="md:hidden shrink-0 flex justify-center pt-1.5 pb-0.5 cursor-pointer"
-          onClick={handleClose}
-          aria-hidden="true"
+        {/* Drag-handle pill — visible on phones (this card is a bottom sheet
+            there). Tap toggles peek/expanded, mirroring the iOS sheet idiom. */}
+        <button
+          type="button"
+          className="md:hidden shrink-0 flex justify-center pt-2 pb-1 cursor-pointer w-full bg-transparent"
+          onClick={() => setCollapsed((v) => !v)}
+          aria-label={collapsed ? 'Expand panel' : 'Collapse panel'}
         >
-          <div className="h-1 w-9 rounded-full bg-slate-300" />
-        </div>
+          <div className={`h-1.5 w-10 rounded-full transition-colors ${collapsed ? 'bg-slate-400' : 'bg-slate-300'}`} />
+        </button>
         {/* Header with sex-tinted gradient strip */}
         <div
           className={`shrink-0 relative bg-gradient-to-b ${sexTint} ${collapsed ? '' : 'to-white border-b border-slate-100'} px-4 pt-4 pb-3`}
         >
+          {/* Mobile-only explicit close (X). The chevron next to it just
+              toggles peek/expanded; users need a separate way to fully dismiss. */}
+          <button
+            type="button"
+            onClick={handleClose}
+            aria-label="Close"
+            className="md:hidden absolute top-2 right-2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-700 active:bg-white/70 rounded-md transition-colors"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+          {/* Chevron — collapse/expand toggle. Hidden on mobile (the drag pill
+              and X above already cover that), shown on tablet+. */}
           <button
             type="button"
             onClick={() => setCollapsed((v) => !v)}
             aria-label={collapsed ? 'Expand details' : 'Collapse details'}
             aria-expanded={!collapsed}
-            className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-white/60 rounded-md transition-colors"
+            className="hidden md:flex absolute top-2 right-2 w-6 h-6 items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-white/60 rounded-md transition-colors"
           >
             <svg
               width="12" height="12" viewBox="0 0 24 24" fill="none"
