@@ -3,6 +3,10 @@
 import { useEffect } from 'react';
 import { useFamilyTreeStore } from './store';
 
+// Module-level guard: the chain only ever needs to run once per page load,
+// even if several pages mount useAutoLoad() while it is still in flight.
+let autoLoadStarted = false;
+
 /**
  * Auto-load order of precedence:
  *   1. Shared Firestore document (authoritative; the admin's latest save)
@@ -10,37 +14,36 @@ import { useFamilyTreeStore } from './store';
  *   3. Bundled /data/family.json (first-ever visit)
  *
  * The first branch that yields data wins. Every visitor hits this on mount.
+ *
+ * The store is global, so completing the chain after the mounting component
+ * unmounts is harmless — no cancellation flag. (An earlier version cancelled
+ * on effect cleanup, but loadFromIndexedDB's miss path sets isLoaded, which
+ * re-fired the effect and cancelled the chain before the family.json
+ * fallback ever ran, stranding first-time visitors on the loading screen.)
  */
 export function useAutoLoad() {
-  const { isLoaded, loadFromRemote, loadFromIndexedDB, loadFromJson } = useFamilyTreeStore();
+  const { loadFromRemote, loadFromIndexedDB, loadFromJson } = useFamilyTreeStore();
 
   useEffect(() => {
-    if (isLoaded) return;
-    let cancelled = false;
+    if (autoLoadStarted || useFamilyTreeStore.getState().isLoaded) return;
+    autoLoadStarted = true;
 
     (async () => {
-      // 1. Try the shared Firestore document first
-      const remote = await loadFromRemote();
-      if (cancelled || remote) return;
-
-      // 2. Fall back to local IndexedDB
-      const local = await loadFromIndexedDB();
-      if (cancelled || local) return;
-
-      // 3. Fall back to the bundled JSON baseline
-      const basePath = process.env.__NEXT_ROUTER_BASEPATH || '';
       try {
+        // 1. Try the shared Firestore document first
+        if (await loadFromRemote()) return;
+
+        // 2. Fall back to local IndexedDB
+        if (await loadFromIndexedDB()) return;
+
+        // 3. Fall back to the bundled JSON baseline
+        const basePath = process.env.__NEXT_ROUTER_BASEPATH || '';
         const r = await fetch(`${basePath}/data/family.json`);
         if (!r.ok) return;
-        const json = await r.text();
-        if (!cancelled) loadFromJson(json, 'family.json');
+        loadFromJson(await r.text(), 'family.json');
       } catch {
         // ignore — empty state is fine
       }
     })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isLoaded, loadFromRemote, loadFromIndexedDB, loadFromJson]);
+  }, [loadFromRemote, loadFromIndexedDB, loadFromJson]);
 }
